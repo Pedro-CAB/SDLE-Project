@@ -45,3 +45,58 @@ function addObject() {
     }
 }
 
+// Example array of objects
+var objectArray = [
+    { listId: 1, name: 'Lista do Supermercado', items:[{idItem: 1, itemName: "Arroz", amountNeeded: 1}] },
+    { listId: 2, name: 'Materiais Artísticos', items: [] },
+    { listId: 3, name: 'Compras para o Natal', items: [] },
+    // ... add more objects as needed
+];
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Get the listId from the URL parameter
+    var urlParams = new URLSearchParams(window.location.search);
+    var listId = urlParams.get('id');
+
+    // Find the object in the array with the matching listId
+    var selectedObject = objectArray.find(function(object) {
+        return object.listId == listId;
+    });
+
+    if (selectedObject) {
+        // Update the title of the page with the object's name
+        document.getElementById('listTitle').textContent = selectedObject.name;
+
+        // Update the list of items on the page
+        var itemListElement = document.getElementById('itemList');
+        selectedObject.items.forEach(function(item) {
+            var listItem = document.createElement('li');
+            listItem.textContent = item.itemName;
+            itemListElement.appendChild(listItem);
+        });
+    } else {
+        // Display an error message if the listId is not found
+        document.getElementById('listTitle').textContent = 'List Not Found';
+    }
+});
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const listsElement = document.getElementById('lists');
+  
+    // Fetch shopping lists from the server
+    fetch('/api/lists')
+      .then(response => response.json())
+      .then(data => {
+        data.forEach(list => {
+          const listItem = document.createElement('li');
+          listItem.textContent = list.listName;
+          listItem.addEventListener('click', () => {
+            // Implement logic to navigate to the list details page
+          });
+          listsElement.appendChild(listItem);
+        });
+      })
+      .catch(error => console.error('Error fetching lists:', error));
+  });
+  

@@ -1,0 +1,24 @@
+{
+  "name": "sdle-project",
+  "version": "1.0.0",
+  "description": "- Filipe Fonseca (up202003474)\r - Marcelo Apolinário (up201603903)\r - Pedro Gomes (up202006086)",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pedro-CAB/SDLE-Project.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Pedro-CAB/SDLE-Project/issues"
+  },
+  "homepage": "https://github.com/Pedro-CAB/SDLE-Project#readme",
+  "dependencies": {
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.6"
+  }
+}
