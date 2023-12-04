@@ -36,6 +36,6 @@ To start the server, all you need to do is run:
 npm start
 ```
 
-The server is hosted in ``localhost:3000``. After running the server, you can [click here](http://localhost:3000/pages/myLists.html) to see the website working in its current version.
+The server is hosted in ``localhost:3000``. After running the server, you can [click here](http://localhost:3000) to see the website working in its current version.
 
 ## Documentation and Notes

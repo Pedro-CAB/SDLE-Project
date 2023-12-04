@@ -45,7 +45,7 @@ function checkUserSession() {
         // Update the object list on the page if listsElement is found
         const listsElement = document.getElementById('lists');
         if (listsElement) {
-            updateObjectList();
+            updateObjectList(listsElement);
         }
     }
 }
@@ -63,9 +63,8 @@ function logout() {
 var objectArray = [];
 
 // Function to update the object list on the page
-function updateObjectList() {
+function updateObjectList(listsElement) {
     // Get the listsElement again as it might not be present on every page
-    var listsElement = document.getElementById('lists');
 
     if (listsElement) {
         // Clear existing list
@@ -99,8 +98,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Navigate to the itemList.html page with the selected list ID
                     window.location.href = `/pages/itemList.html?listId=${list.idList}`;
                 });
-
-                listsElement.appendChild(listItem);
+                if(listsElement){
+                    listsElement.appendChild(listItem);
+                }
             });
         })
         .catch(error => console.error('Error fetching lists:', error));

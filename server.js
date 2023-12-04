@@ -19,8 +19,8 @@ app.use(session({
 // Connect to the SQLite database
 const db = new sqlite3.Database('db.db');
 
-// Serve static files from the root
-app.use(express.static(path.join(__dirname, '/')));
+// Serve static files from the public directory
+app.use(express.static('public'));
 
 // API ENDPOINTS
 
@@ -43,7 +43,7 @@ app.get('/pages/myLists.html', (req, res) => {
     console.log("Checking user authentication...")
     if (req.session && req.session.userId) {
         console.log("User is authenticated! Serving...")
-        res.sendFile(path.join(__dirname,'/', '/pages/myLists.html'));
+        res.sendFile(path.join(__dirname,'pages','myLists.html'));
     } else {
         console.log("User is not authenticated! Redirecting...")
         res.redirect('/pages/login.html');
@@ -53,7 +53,7 @@ app.get('/pages/myLists.html', (req, res) => {
 // Serve itemList.html
 app.get('/pages/itemList.html', (req, res) => {
     if (req.session && req.session.userId) {
-        res.sendFile(path.join(__dirname, '/', '/pages/itemList.html'));
+        res.sendFile(path.join(__dirname, 'pages', 'itemList.html'));
     } else {
         res.redirect('/pages/login.html');
     }
