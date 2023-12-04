@@ -9,29 +9,8 @@
 <body>
     <div class="container">
         <h2>Your Shopping Lists</h2>
-        <ul id="objectList"></ul>
+        <ul id="lists"></ul>
     </div>
     <script src="/script.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const objectListElement = document.getElementById('objectList');
-    
-            // Fetch shopping lists from the server
-            fetch('/api/lists')
-                .then(response => response.json())
-                .then(data => {
-                    data.forEach(list => {
-                        const listItem = document.createElement('li');
-                        listItem.textContent = list.listName;
-                        listItem.addEventListener('click', () => {
-                            // Navigate to the itemList.html page with the selected list ID
-                            window.location.href = `/pages/itemList.html?listId=${list.idList}`;
-                        });
-                        objectListElement.appendChild(listItem);
-                    });
-                })
-                .catch(error => console.error('Error fetching lists:', error));
-        });
-    </script>
 </body>
 </html>
