@@ -60,12 +60,7 @@ function logout() {
 }
 
 // Example array of objects
-var objectArray = [
-    { listId: 1, name: 'Lista do Supermercado', items:[{idItem: 1, itemName: "Arroz", amountNeeded: 1}] },
-    { listId: 2, name: 'Materiais Artísticos', items: [] },
-    { listId: 3, name: 'Compras para o Natal', items: [] },
-    // ... add more objects as needed
-];
+var objectArray = [];
 
 // Function to update the object list on the page
 function updateObjectList() {
