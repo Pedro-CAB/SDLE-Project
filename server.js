@@ -3,6 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const sqlite3 = require('sqlite3').verbose();
+const md5 = require('md5'); // Add this line to require md5 library
 
 const app = express();
 const port = 3000;
@@ -88,7 +89,7 @@ app.get('/api/items', (req, res) => {
     });
 });
 
-// Endpoint to handle user login
+// Endpoint to handle user login with MD5 hashing
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
 
@@ -102,10 +103,12 @@ app.post('/api/login', (req, res) => {
             // No user found with the given username
             res.json({ success: false, message: 'Invalid username or password' });
         } else {
-            // User found, now compare passwords
-            if (user.password === password) {
+            // User found, now compare hashed passwords
+            const hashedPassword = md5(password);
+
+            if (user.password === hashedPassword) {
                 // Passwords match, store user ID in the session
-                req.session.userId = user.idUser; // Fix: use idUser instead of userId
+                req.session.userId = user.idUser;
 
                 console.log('User ID stored in session:', req.session.userId); // Add this line for debugging
 
