@@ -1,7 +1,16 @@
-document.addEventListener('DOMContentLoaded', function () {
-    // Check for existing user session on page load
-    checkUserSession();
-});
+// Wrap the event listener in a self-invoking function to execute only once
+(function () {
+    let executed = false;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        if (!executed) {
+            executed = true;
+
+            // Check for existing user session on page load
+            checkUserSession();
+        }
+    });
+})();
 
 function login() {
     var username = document.getElementById('username').value;
@@ -43,26 +52,49 @@ function checkUserSession() {
 
         // Update the object list on the page if listsElement is found
         const listsElement = document.getElementById('lists');
-        if (listsElement) {
+        if (listsElement && !listsElement.dataset.listsLoaded) {
             // Fetch shopping lists for the authenticated user
             fetch('/api/lists')
                 .then(response => response.json())
                 .then(data => {
-                    // Clear existing list
+                    // Clear existing list and its event listeners
                     listsElement.innerHTML = '';
+                    const newListsElement = listsElement.cloneNode(true);
+                    listsElement.parentNode.replaceChild(newListsElement, listsElement);
+
+                    // Use a Set to keep track of unique list names
+                    const uniqueListNames = new Set();
+
+                    // Function to add click event listener to list item
+                    const addClickListener = (list, listItem) => {
+                        listItem.addEventListener('click', () => {
+                            // Navigate to the itemList.html page with the selected list ID
+                            window.location.href = `/pages/itemList.html?listId=${list.idList}`;
+                        });
+                    };
 
                     // Iterate through the array and create list items
                     data.forEach(list => {
-                        var listItem = document.createElement('li');
-                        listItem.textContent = list.listName;
-                        listsElement.appendChild(listItem);
+                        // Ensure unique list names
+                        if (!uniqueListNames.has(list.listName)) {
+                            uniqueListNames.add(list.listName);
+
+                            var listItem = document.createElement('li');
+                            listItem.textContent = list.listName;
+
+                            addClickListener(list, listItem);
+
+                            newListsElement.appendChild(listItem);
+                        }
                     });
+
+                    // Mark that the lists have been loaded to avoid duplication
+                    newListsElement.dataset.listsLoaded = true;
                 })
                 .catch(error => console.error('Error fetching lists:', error));
         }
     }
 }
-
 
 function logout() {
     // Clear user session data
