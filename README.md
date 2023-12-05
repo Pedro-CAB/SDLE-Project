@@ -15,4 +15,27 @@
 - [Overleaf Intermediate Report](https://www.overleaf.com/project/654a6ce5c7593c6b142634d2)
 - [Additional Content on Local-First Software](https://localfirstweb.dev/)
 
+## Project Setup
+
+### Local Server (Node.js)
+
+Setting up the packages should be done with just this command:
+
+```
+npm install
+```
+
+The dependencies that were installed for initial configuration were the ones specified in the commands below, but ``npm install`` should be enough to install everything on its own.
+```
+npm install express
+npm install sqlite3
+```
+
+To start the server, all you need to do is run:
+```
+npm start
+```
+
+The server is hosted in ``localhost:3000``. After running the server, you can [click here](http://localhost:3000) to see the website working in its current version.
+
 ## Documentation and Notes

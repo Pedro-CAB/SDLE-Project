@@ -1,0 +1,127 @@
+const path = require('path');
+const express = require('express');
+const bodyParser = require('body-parser');
+const session = require('express-session');
+const sqlite3 = require('sqlite3').verbose();
+const md5 = require('md5'); // Add this line to require md5 library
+
+const app = express();
+const port = 3000;
+
+app.use(bodyParser.json());
+
+// Use session middleware
+app.use(session({
+    secret: 'a2652fc8dc90f14fcfd7b9fe7f79362602ae5da1fb3faad6c261e58f8338a09c',
+    resave: false,
+    saveUninitialized: true,
+}));
+
+// Connect to the SQLite database
+const db = new sqlite3.Database('db.db');
+
+// Serve static files from the public directory
+app.use(express.static('public'));
+
+// API ENDPOINTS
+
+// Endpoint to get a list of shopping lists for the authenticated user
+app.get('/api/lists', (req, res) => {
+    const userId = req.session.userId;
+
+    // Fetch shopping lists associated with the user from the database
+    const query = `
+        SELECT sl.*
+        FROM ShoppingList sl
+        JOIN UserList ul ON sl.idList = ul.idList
+        WHERE ul.idUser = ?
+    `;
+    console.log("Query userId: " + userId)
+    db.all(query, [userId], (err, rows) => {
+        if (err) {
+            console.error(err.message);
+            res.status(500).send('Internal Server Error');
+        } else {
+            res.json(rows);
+        }
+    });
+});
+
+// Serve myLists.html
+app.get('/pages/myLists.html', (req, res) => {
+    console.log("Serving myLists.html...")
+    console.log("Checking user authentication...")
+    if (req.session && req.session.idUser) {
+        console.log("User is authenticated! Serving...")
+        res.sendFile(path.join(__dirname,'pages','myLists.html'));
+    } else {
+        console.log("User is not authenticated! Redirecting...")
+        res.redirect('/pages/login.html');
+    }
+});
+
+// Serve itemList.html
+app.get('/pages/itemList.html', (req, res) => {
+    if (req.session && req.session.userId) {
+        res.sendFile(path.join(__dirname, 'pages', 'itemList.html'));
+    } else {
+        res.redirect('/pages/login.html');
+    }
+});
+
+// Endpoint to get items for a specific shopping list
+app.get('/api/items', (req, res) => {
+    const listId = req.query.listId;
+    console.log('Received request for listId:', listId);
+
+    // Log the SQL query being executed
+    const query = 'SELECT * FROM Item WHERE idList = ?';
+    console.log('Executing query:', query, 'with parameters:', [listId]);
+
+    // Fetch items for the specified shopping list from the database
+    db.all(query, [parseInt(listId)], (err, rows) => {
+        if (err) {
+            console.error(err.message);
+            res.status(500).send('Internal Server Error');
+        } else {
+            res.json(rows);
+        }
+    });
+});
+
+// Endpoint to handle user login with MD5 hashing
+app.post('/api/login', (req, res) => {
+    const { username, password } = req.body;
+
+    // Fetch user from the database based on the provided username
+    const query = 'SELECT * FROM User WHERE username = ?';
+    db.get(query, [username], (err, user) => {
+        if (err) {
+            console.error(err.message);
+            res.status(500).json({ success: false, message: 'Internal Server Error' });
+        } else if (!user) {
+            // No user found with the given username
+            res.json({ success: false, message: 'Invalid username or password' });
+        } else {
+            // User found, now compare hashed passwords
+            const hashedPassword = md5(password);
+
+            if (user.password === hashedPassword) {
+                // Passwords match, store user ID in the session
+                req.session.userId = user.idUser;
+
+                console.log('User ID stored in session:', req.session.userId); // Add this line for debugging
+
+                // Send success response with user ID and username
+                res.json({ success: true, userId: user.idUser, username: user.username });
+            } else {
+                // Passwords do not match
+                res.json({ success: false, message: 'Invalid username or password' });
+            }
+        }
+    });
+});
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
