@@ -24,10 +24,19 @@ app.use(express.static('public'));
 
 // API ENDPOINTS
 
-// Endpoint to get a list of shopping lists
+// Endpoint to get a list of shopping lists for the authenticated user
 app.get('/api/lists', (req, res) => {
-    // Fetch shopping lists from the database
-    db.all('SELECT * FROM ShoppingList', (err, rows) => {
+    const userId = req.session.userId;
+
+    // Fetch shopping lists associated with the user from the database
+    const query = `
+        SELECT sl.*
+        FROM ShoppingList sl
+        JOIN UserList ul ON sl.idList = ul.idList
+        WHERE ul.idUser = ?
+    `;
+    console.log("Query userId: " + userId)
+    db.all(query, [userId], (err, rows) => {
         if (err) {
             console.error(err.message);
             res.status(500).send('Internal Server Error');
@@ -41,7 +50,7 @@ app.get('/api/lists', (req, res) => {
 app.get('/pages/myLists.html', (req, res) => {
     console.log("Serving myLists.html...")
     console.log("Checking user authentication...")
-    if (req.session && req.session.userId) {
+    if (req.session && req.session.idUser) {
         console.log("User is authenticated! Serving...")
         res.sendFile(path.join(__dirname,'pages','myLists.html'));
     } else {
@@ -96,10 +105,12 @@ app.post('/api/login', (req, res) => {
             // User found, now compare passwords
             if (user.password === password) {
                 // Passwords match, store user ID in the session
-                req.session.userId = user.userId;
+                req.session.userId = user.idUser; // Fix: use idUser instead of userId
+
+                console.log('User ID stored in session:', req.session.userId); // Add this line for debugging
 
                 // Send success response with user ID and username
-                res.json({ success: true, userId: user.userId, username: user.username });
+                res.json({ success: true, userId: user.idUser, username: user.username });
             } else {
                 // Passwords do not match
                 res.json({ success: false, message: 'Invalid username or password' });

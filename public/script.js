@@ -40,15 +40,29 @@ function checkUserSession() {
     if (userId && username) {
         // User session exists, perform actions accordingly
         console.log('User is logged in:', username);
-        // Add logic to customize the UI for a logged-in user
 
         // Update the object list on the page if listsElement is found
         const listsElement = document.getElementById('lists');
         if (listsElement) {
-            updateObjectList(listsElement);
+            // Fetch shopping lists for the authenticated user
+            fetch('/api/lists')
+                .then(response => response.json())
+                .then(data => {
+                    // Clear existing list
+                    listsElement.innerHTML = '';
+
+                    // Iterate through the array and create list items
+                    data.forEach(list => {
+                        var listItem = document.createElement('li');
+                        listItem.textContent = list.listName;
+                        listsElement.appendChild(listItem);
+                    });
+                })
+                .catch(error => console.error('Error fetching lists:', error));
         }
     }
 }
+
 
 function logout() {
     // Clear user session data
