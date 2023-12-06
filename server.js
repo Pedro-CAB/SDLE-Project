@@ -84,10 +84,17 @@ app.get('/api/items', (req, res) => {
             console.error(err.message);
             res.status(500).send('Internal Server Error');
         } else {
-            res.json(rows);
+            // Ensure the 'amountNeeded' attribute is present in the response
+            const itemsWithAmount = rows.map(item => ({
+                itemName: item.itemName,
+                amountNeeded: item.amountNeeded,
+            }));
+
+            res.json(itemsWithAmount);
         }
     });
 });
+
 
 // Endpoint to handle user login with MD5 hashing
 app.post('/api/login', (req, res) => {
@@ -184,7 +191,7 @@ app.post('/api/createList', (req, res) => {
                     res.status(500).json({ success: false, message: 'Internal Server Error' });
                 } else {
                     // Send success response with the new list ID
-                    res.json({ success: true, listId: newListId, message: 'List created successfully' });
+                    res.json({ success: true, listId: parseInt(newListId), message: 'List created successfully' });
                 }
             });
         }
@@ -216,6 +223,23 @@ app.get('/api/listName', (req, res) => {
         } else {
             // Send the list name in the response
             res.json({ listName: row ? row.listName : null });
+        }
+    });
+});
+
+// Endpoint for creating list items
+app.post('/api/createItem', (req, res) => {
+    const { itemName, itemAmount, listId } = req.body;
+
+    // Insert the new item into the Item table
+    const createItemQuery = 'INSERT INTO Item (itemName, amountNeeded, idList) VALUES (?, ?, ?)';
+    db.run(createItemQuery, [itemName, itemAmount, listId], function (err) {
+        if (err) {
+            console.error(err.message);
+            res.status(500).json({ success: false, message: 'Internal Server Error' });
+        } else {
+            // Send success response
+            res.json({ success: true, message: 'Item created successfully' });
         }
     });
 });
