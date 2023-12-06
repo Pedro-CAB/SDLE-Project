@@ -190,3 +190,32 @@ app.post('/api/createList', (req, res) => {
         }
     });
 });
+
+
+// Endpoint to get the list name
+app.get('/api/listName', (req, res) => {
+    const userId = req.session.userId;
+    const listId = req.query.listId; // Get listId from the query parameters
+
+    console.log("User ID:" + userId)
+    console.log("List ID:" + listId)
+
+    // Fetch the list name associated with the authenticated user and listId from the database
+    const query = `
+        SELECT sl.listName
+        FROM ShoppingList sl
+        JOIN UserList ul ON sl.idList = ul.idList
+        WHERE ul.idUser = ? AND sl.idList = ?
+        LIMIT 1
+    `;
+
+    db.get(query, [userId, listId], (err, row) => {
+        if (err) {
+            console.error(err.message);
+            res.status(500).send('Internal Server Error');
+        } else {
+            // Send the list name in the response
+            res.json({ listName: row ? row.listName : null });
+        }
+    });
+});

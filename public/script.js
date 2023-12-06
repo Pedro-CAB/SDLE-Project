@@ -218,3 +218,60 @@ function createShoppingList() {
 function redirectToCreateList() {
     window.location.href = '/pages/createList.html';
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    // Check for existing user session on page load
+    checkUserSession();
+
+    // Fetch the specific list name from the server for itemList.html
+    const listNameElement = document.getElementById('listName');
+    if (listNameElement) {
+        // Get the listId from the query parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const listId = urlParams.get('listId');
+
+        // Fetch the list name for the specific listId
+        fetchListName(listNameElement, listId);
+    }
+
+    const listsElement = document.getElementById('lists');
+
+    // Fetch shopping lists from the server
+    fetch('/api/lists')
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(list => {
+                const listItem = document.createElement('li');
+                listItem.textContent = list.listName;
+
+                // Add the event listener to the listItem itself
+                listItem.addEventListener('click', () => {
+                    // Navigate to the itemList.html page with the selected list ID
+                    window.location.href = `/pages/itemList.html?listId=${list.idList}`;
+                });
+                if(listsElement){
+                    listsElement.appendChild(listItem);
+                }
+            });
+        })
+        .catch(error => console.error('Error fetching lists:', error));
+});
+
+function fetchListName(listNameElement, listId) {
+    // Fetch the list name from the server for the specified listId
+    fetch(`/api/listName?listId=${listId}`)
+        .then(response => response.json())
+        .then(data => {
+            // Update the HTML content with the retrieved list name
+            if (listNameElement) {
+                listNameElement.textContent = data.listName;
+            }
+
+            // Update the page title with the retrieved list name
+            const pageTitleElement = document.getElementById('pageTitle');
+            if (pageTitleElement) {
+                pageTitleElement.textContent = data.listName;
+            }
+        })
+        .catch(error => console.error('Error fetching list name:', error));
+}
