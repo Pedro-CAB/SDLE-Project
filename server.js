@@ -162,3 +162,31 @@ app.post('/api/createAccount', (req, res) => {
         }
     });
 });
+
+// Endpoint to handle shopping list creation
+app.post('/api/createList', (req, res) => {
+    const listName = req.body.listName;
+
+    // Insert the new shopping list into the ShoppingList table
+    const createListQuery = 'INSERT INTO ShoppingList (listName) VALUES (?)';
+    db.run(createListQuery, [listName], function (err) {
+        if (err) {
+            console.error(err.message);
+            res.status(500).json({ success: false, message: 'Internal Server Error' });
+        } else {
+            const newListId = this.lastID; // Get the ID of the newly inserted list
+
+            // Create a UserList entry connecting the current user to the new list
+            const createRelationQuery = 'INSERT INTO UserList (idUser, idList) VALUES (?, ?)';
+            db.run(createRelationQuery, [req.session.userId, newListId], function (err) {
+                if (err) {
+                    console.error(err.message);
+                    res.status(500).json({ success: false, message: 'Internal Server Error' });
+                } else {
+                    // Send success response with the new list ID
+                    res.json({ success: true, listId: newListId, message: 'List created successfully' });
+                }
+            });
+        }
+    });
+});

@@ -188,3 +188,33 @@ function createAccount() {
     })
     .catch(error => console.error('Create Account error:', error));
 }
+
+function createShoppingList() {
+    var listName = document.getElementById('listName').value;
+    var createListMessage = document.getElementById('createListMessage');
+
+    // Send shopping list creation data to the server
+    fetch('/api/createList', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ listName }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        createListMessage.textContent = data.message;
+
+        if (data.success) {
+            // Redirect to the myLists.html page after successful list creation
+            setTimeout(() => {
+                window.location.href = '/pages/myLists.html';
+            }, 2000); // Redirect after 2 seconds (adjust as needed)
+        }
+    })
+    .catch(error => console.error('Create Shopping List error:', error));
+}
+
+function redirectToCreateList() {
+    window.location.href = '/pages/createList.html';
+}
