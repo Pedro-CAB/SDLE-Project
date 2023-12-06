@@ -148,6 +148,43 @@ document.addEventListener('DOMContentLoaded', function () {
                     listsElement.appendChild(listItem);
                 }
             });
+
+            // Add button to redirect to Create Account page
+            const createAccountButton = document.getElementById('createAccountButton');
+            if (createAccountButton) {
+                createAccountButton.addEventListener('click', () => {
+                    window.location.href = '/pages/createAccount.html';
+                });
+            }
         })
         .catch(error => console.error('Error fetching lists:', error));
 });
+
+// Creates an account
+function createAccount() {
+    var name = document.getElementById('name').value;
+    var username = document.getElementById('username').value;
+    var password = document.getElementById('password').value;
+    var createAccountMessage = document.getElementById('createAccountMessage');
+
+    // Send account creation data to the server
+    fetch('/api/createAccount', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, username, password }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        createAccountMessage.textContent = data.message;
+
+        if (data.success) {
+            // Redirect to the login page after successful account creation
+            setTimeout(() => {
+                window.location.href = '/pages/login.html';
+            }, 2000); // Redirect after 2 seconds (adjust as needed)
+        }
+    })
+    .catch(error => console.error('Create Account error:', error));
+}

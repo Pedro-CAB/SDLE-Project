@@ -125,3 +125,40 @@ app.post('/api/login', (req, res) => {
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
+
+// Serve createAccount.html
+app.get('/pages/createAccount.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'pages', 'createAccount.html'));
+});
+
+// Endpoint to handle user account creation
+app.post('/api/createAccount', (req, res) => {
+    const { name, username, password } = req.body;
+
+    // Check if the username is already taken
+    const checkUsernameQuery = 'SELECT * FROM User WHERE username = ?';
+    db.get(checkUsernameQuery, [username], (err, existingUser) => {
+        if (err) {
+            console.error(err.message);
+            res.status(500).json({ success: false, message: 'Internal Server Error' });
+        } else if (existingUser) {
+            // Username is already taken
+            res.json({ success: false, message: 'Username is already taken' });
+        } else {
+            // Hash the password using MD5
+            const hashedPassword = md5(password);
+
+            // Insert the new user into the User table
+            const createUserQuery = 'INSERT INTO User (name, username, password) VALUES (?, ?, ?)';
+            db.run(createUserQuery, [name, username, hashedPassword], function (err) {
+                if (err) {
+                    console.error(err.message);
+                    res.status(500).json({ success: false, message: 'Internal Server Error' });
+                } else {
+                    // Send success response
+                    res.json({ success: true, message: 'Account created successfully' });
+                }
+            });
+        }
+    });
+});
