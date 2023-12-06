@@ -86,8 +86,10 @@ app.get('/api/items', (req, res) => {
         } else {
             // Ensure the 'amountNeeded' attribute is present in the response
             const itemsWithAmount = rows.map(item => ({
+                idItem: item.idItem,
                 itemName: item.itemName,
                 amountNeeded: item.amountNeeded,
+                idList: item.idList
             }));
 
             res.json(itemsWithAmount);
@@ -240,6 +242,23 @@ app.post('/api/createItem', (req, res) => {
         } else {
             // Send success response
             res.json({ success: true, message: 'Item created successfully' });
+        }
+    });
+});
+
+// Endpoint to delete a specific item
+app.delete('/api/deleteItem/:itemId', (req, res) => {
+    const itemId = req.params.itemId;
+
+    // Delete the item from the Item table
+    const deleteItemQuery = 'DELETE FROM Item WHERE idItem = ?';
+    db.run(deleteItemQuery, [itemId], function (err) {
+        if (err) {
+            console.error(err.message);
+            res.status(500).json({ success: false, message: 'Internal Server Error' });
+        } else {
+            // Send success response
+            res.json({ success: true, message: 'Item deleted successfully' });
         }
     });
 });

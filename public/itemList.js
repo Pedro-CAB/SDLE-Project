@@ -15,52 +15,86 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Add button to create a new item
-    if (createItemButton) {
-        createItemButton.addEventListener('click', () => {
-            // Prompt the user for item details
-            const itemName = prompt('Enter item name:');
-            const itemAmount = prompt('Enter item amount:');
+// Add button to create a new item
+// Add button to create a new item
+if (createItemButton) {
+    createItemButton.addEventListener('click', async () => {
+        // Prompt the user for item details
+        const itemName = prompt('Enter item name:');
+        const itemAmount = prompt('Enter item amount:');
 
-            // Ensure the user provided input before proceeding
-            if (itemName !== null && itemAmount !== null) {
-                const newItem = {
-                    itemName: itemName,
-                    itemAmount: parseInt(itemAmount),
-                    listId: parseInt(listId),
-                };
+        // Ensure the user provided input before proceeding
+        if (itemName !== null && itemAmount !== null) {
+            const newItem = {
+                itemName: itemName,
+                itemAmount: parseInt(itemAmount),
+                listId: parseInt(listId),
+            };
 
+            try {
                 // Send the new item data to the server
-                fetch('/api/createItem', {
+                const response = await fetch('/api/createItem', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(newItem),
-                })
-                .then(response => response.json())
-                .then(result => {
-                    // Log the result for debugging
-                    console.log('Item creation result:', result);
-
-                    // Fetch the updated list from the server
-                    return fetch(`/api/items?listId=${listId}`);
-                })
-                .then(response => response.json())
-                .then(data => {
-                    // Log the data received from the server
-                    console.log('Updated item list:', data);
-
-                    // Render the updated list on the page
-                    renderItems(data);
-                })
-                .catch(error => {
-                    console.error('Error creating or fetching items:', error);
-                    alert('Error creating or fetching items. Check console for details.');
                 });
+
+                const result = await response.json();
+                console.log('Item creation result:', result);
+
+                // Fetch the updated list from the server after creating the item
+                const updatedListResponse = await fetch(`/api/items?listId=${listId}`);
+                const updatedListData = await updatedListResponse.json();
+
+                // Log the data received from the server
+                console.log('Updated item list:', updatedListData);
+
+                // Render the updated list on the page
+                renderItems(updatedListData);
+            } catch (error) {
+                console.error('Error creating or fetching items:', error);
+                alert('Error creating or fetching items. Check console for details.');
             }
-        });
-    }
+        }
+    });
+}
+
+// Add event listener for delete buttons
+if (itemListElement) {
+    itemListElement.addEventListener('click', (event) => {
+        const deleteButton = event.target.closest('.delete-button');
+        if (deleteButton) {
+            const itemId = deleteButton.dataset.itemId;
+
+            // Send a request to delete the item
+            fetch(`/api/deleteItem/${itemId}`, {
+                method: 'DELETE',
+            })
+            .then(response => response.json())
+            .then(result => {
+                // Log the result for debugging
+                console.log('Item deletion result:', result);
+
+                // Fetch the updated list from the server after deleting the item
+                return fetch(`/api/items?listId=${listId}`);
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Log the data received from the server
+                console.log('Updated item list after deletion:', data);
+
+                // Render the updated list on the page
+                renderItems(data);
+            })
+            .catch(error => {
+                console.error('Error deleting or fetching items:', error);
+                alert('Error deleting or fetching items. Check console for details.');
+            });
+        }
+    });
+}
 
     // Fetch items for the specific shopping list after the DOM has loaded
     fetch(`/api/items?listId=${listId}`)
@@ -90,8 +124,54 @@ function renderItems(items) {
     items.forEach(item => {
         const listItem = document.createElement('li');
         listItem.textContent = `${item.itemName} - Amount: ${item.amountNeeded}`;
+
+        // Create a delete button for each item
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+
+        // Ensure that idItem and idList are present in the item object
+        const idItem = item.idItem; // Change this based on the actual property name
+        const idList = item.idList; // Change this based on the actual property name
+
+        deleteButton.addEventListener('click', () => deleteItem(idItem, idList)); // Pass idList to deleteItem function
+
+        // Append the delete button to the list item
+        listItem.appendChild(deleteButton);
+
+        // Append the list item to the itemListElement
         itemListElement.appendChild(listItem);
     });
+}
+
+
+// Add a function to delete an item
+function deleteItem(itemId, listId) {
+    if (confirm('Are you sure you want to delete this item?')) {
+        // Send a request to the server to delete the item
+        fetch(`/api/deleteItem/${itemId}`, {
+            method: 'DELETE',
+        })
+        .then(response => response.json())
+        .then(result => {
+            // Log the result for debugging
+            console.log('Item deletion result:', result);
+
+            // Fetch the updated list from the server after deletion
+            return fetch(`/api/items?listId=${listId}`);
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Log the data received from the server
+            console.log('Updated item list:', data);
+
+            // Render the updated list on the page
+            renderItems(data);
+        })
+        .catch(error => {
+            console.error('Error deleting or fetching items:', error);
+            alert('Error deleting or fetching items. Check console for details.');
+        });
+    }
 }
 
 function fetchListName(listNameElement) {
