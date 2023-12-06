@@ -1,9 +1,10 @@
+
 const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const sqlite3 = require('sqlite3').verbose();
-const md5 = require('md5'); // Add this line to require md5 library
+const md5 = require('md5');
 
 const app = express();
 const port = 3000;
@@ -84,10 +85,19 @@ app.get('/api/items', (req, res) => {
             console.error(err.message);
             res.status(500).send('Internal Server Error');
         } else {
-            res.json(rows);
+            // Ensure the 'amountNeeded' attribute is present in the response
+            const itemsWithAmount = rows.map(item => ({
+                idItem: item.idItem,
+                itemName: item.itemName,
+                amountNeeded: item.amountNeeded,
+                idList: item.idList
+            }));
+
+            res.json(itemsWithAmount);
         }
     });
 });
+
 
 // Endpoint to handle user login with MD5 hashing
 app.post('/api/login', (req, res) => {
@@ -124,4 +134,153 @@ app.post('/api/login', (req, res) => {
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
+});
+
+// Serve createAccount.html
+app.get('/pages/createAccount.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'pages', 'createAccount.html'));
+});
+
+// Endpoint to handle user account creation
+app.post('/api/createAccount', (req, res) => {
+    const { name, username, password } = req.body;
+
+    // Check if the username is already taken
+    const checkUsernameQuery = 'SELECT * FROM User WHERE username = ?';
+    db.get(checkUsernameQuery, [username], (err, existingUser) => {
+        if (err) {
+            console.error(err.message);
+            res.status(500).json({ success: false, message: 'Internal Server Error' });
+        } else if (existingUser) {
+            // Username is already taken
+            res.json({ success: false, message: 'Username is already taken' });
+        } else {
+            // Hash the password using MD5
+            const hashedPassword = md5(password);
+
+            // Insert the new user into the User table
+            const createUserQuery = 'INSERT INTO User (name, username, password) VALUES (?, ?, ?)';
+            db.run(createUserQuery, [name, username, hashedPassword], function (err) {
+                if (err) {
+                    console.error(err.message);
+                    res.status(500).json({ success: false, message: 'Internal Server Error' });
+                } else {
+                    // Send success response
+                    res.json({ success: true, message: 'Account created successfully' });
+                }
+            });
+        }
+    });
+});
+
+// Endpoint to handle shopping list creation
+app.post('/api/createList', (req, res) => {
+    const listName = req.body.listName;
+
+    // Insert the new shopping list into the ShoppingList table
+    const createListQuery = 'INSERT INTO ShoppingList (listName) VALUES (?)';
+    db.run(createListQuery, [listName], function (err) {
+        if (err) {
+            console.error(err.message);
+            res.status(500).json({ success: false, message: 'Internal Server Error' });
+        } else {
+            const newListId = this.lastID; // Get the ID of the newly inserted list
+
+            // Create a UserList entry connecting the current user to the new list
+            const createRelationQuery = 'INSERT INTO UserList (idUser, idList) VALUES (?, ?)';
+            db.run(createRelationQuery, [req.session.userId, newListId], function (err) {
+                if (err) {
+                    console.error(err.message);
+                    res.status(500).json({ success: false, message: 'Internal Server Error' });
+                } else {
+                    // Send success response with the new list ID
+                    res.json({ success: true, listId: parseInt(newListId), message: 'List created successfully' });
+                }
+            });
+        }
+    });
+});
+
+
+// Endpoint to get the list name
+app.get('/api/listName', (req, res) => {
+    const userId = req.session.userId;
+    const listId = req.query.listId; // Get listId from the query parameters
+
+    console.log("User ID:" + userId)
+    console.log("List ID:" + listId)
+
+    // Fetch the list name associated with the authenticated user and listId from the database
+    const query = `
+        SELECT sl.listName
+        FROM ShoppingList sl
+        JOIN UserList ul ON sl.idList = ul.idList
+        WHERE ul.idUser = ? AND sl.idList = ?
+        LIMIT 1
+    `;
+
+    db.get(query, [userId, listId], (err, row) => {
+        if (err) {
+            console.error(err.message);
+            res.status(500).send('Internal Server Error');
+        } else {
+            // Send the list name in the response
+            res.json({ listName: row ? row.listName : null });
+        }
+    });
+});
+
+// Endpoint for creating list items
+app.post('/api/createItem', (req, res) => {
+    const { itemName, itemAmount, listId } = req.body;
+
+    // Insert the new item into the Item table
+    const createItemQuery = 'INSERT INTO Item (itemName, amountNeeded, idList) VALUES (?, ?, ?)';
+    db.run(createItemQuery, [itemName, itemAmount, listId], function (err) {
+        if (err) {
+            console.error(err.message);
+            res.status(500).json({ success: false, message: 'Internal Server Error' });
+        } else {
+            // Send success response
+            res.json({ success: true, message: 'Item created successfully' });
+        }
+    });
+});
+
+// Endpoint to delete a specific item
+app.delete('/api/deleteItem/:itemId', (req, res) => {
+    const itemId = req.params.itemId;
+
+    // Delete the item from the Item table
+    const deleteItemQuery = 'DELETE FROM Item WHERE idItem = ?';
+    db.run(deleteItemQuery, [itemId], function (err) {
+        if (err) {
+            console.error(err.message);
+            res.status(500).json({ success: false, message: 'Internal Server Error' });
+        } else {
+            // Send success response
+            res.json({ success: true, message: 'Item deleted successfully' });
+        }
+    });
+});
+
+// Endpoint to handle item edits
+app.put('/api/editItem', (req, res) => {
+    const { itemId, newItemName, newAmountNeeded } = req.body;
+
+    console.log(req.body);
+
+    // Update the item in the database
+    const updateItemQuery = 'UPDATE Item SET itemName = ?, amountNeeded = ? WHERE idItem = ?';
+    db.run(updateItemQuery, [newItemName, newAmountNeeded, itemId], function (err) {
+        if (err) {
+            console.error('Error editing item:', err);
+            res.status(500).json({ success: false, message: 'Internal server error' });
+        } else if (this.changes === 0) {
+            // No rows were affected, item not found
+            res.status(404).json({ success: false, message: 'Item not found' });
+        } else {
+            res.json({ success: true, message: 'Item edited successfully' });
+        }
+    });
 });

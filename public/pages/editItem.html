@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Item</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <h2>Edit Item</h2>
+    <label for="itemName">Item Name:</label>
+    <input type="text" id="itemName" placeholder="Previous Item Name">
+
+    <label for="amountNeeded">Amount Needed:</label>
+    <input type="number" id="amountNeeded" placeholder="Previous Amount Needed">
+
+    <button onclick="saveChanges()">Save Changes</button>
+
+    <script>
+        // Fetch the query parameters from the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const listId = urlParams.get('listId');
+        const itemId = urlParams.get('itemId');
+
+        const prevItemName = decodeURIComponent(urlParams.get('itemName'));
+        const prevAmountNeeded = parseInt(urlParams.get('amountNeeded'));
+
+        console.log(typeof(prevAmountNeeded))
+
+        // Set the previous values in the input fields
+        document.getElementById('itemName').value = prevItemName;
+        document.getElementById('amountNeeded').value = prevAmountNeeded;
+
+        function saveChanges() {
+            const newItemName = document.getElementById('itemName').value;
+            const newAmountNeeded = document.getElementById('amountNeeded').value;
+
+            // Send the edited item data to the server
+            fetch('/api/editItem', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    itemId: parseInt(itemId),
+                    listId: parseInt(listId),
+                    newItemName: newItemName,
+                    newAmountNeeded: parseInt(newAmountNeeded),
+                }),
+            })
+            .then(response => response.json())
+            .then(result => {
+                // Log the result for debugging
+                console.log('Item edit result:', result);
+                // Redirect back to the item list page after editing
+                window.location.href = `/pages/itemList.html?listId=${listId}`;
+            })
+            .catch(error => {
+                console.error('Error editing item:', error);
+                alert('Error editing item. Check console for details.');
+            });
+        }
+    </script>
+</body>
+</html>
