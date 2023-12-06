@@ -1,9 +1,10 @@
+
 const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const sqlite3 = require('sqlite3').verbose();
-const md5 = require('md5'); // Add this line to require md5 library
+const md5 = require('md5');
 
 const app = express();
 const port = 3000;
@@ -259,6 +260,27 @@ app.delete('/api/deleteItem/:itemId', (req, res) => {
         } else {
             // Send success response
             res.json({ success: true, message: 'Item deleted successfully' });
+        }
+    });
+});
+
+// Endpoint to handle item edits
+app.put('/api/editItem', (req, res) => {
+    const { itemId, newItemName, newAmountNeeded } = req.body;
+
+    console.log(req.body);
+
+    // Update the item in the database
+    const updateItemQuery = 'UPDATE Item SET itemName = ?, amountNeeded = ? WHERE idItem = ?';
+    db.run(updateItemQuery, [newItemName, newAmountNeeded, itemId], function (err) {
+        if (err) {
+            console.error('Error editing item:', err);
+            res.status(500).json({ success: false, message: 'Internal server error' });
+        } else if (this.changes === 0) {
+            // No rows were affected, item not found
+            res.status(404).json({ success: false, message: 'Item not found' });
+        } else {
+            res.json({ success: true, message: 'Item edited successfully' });
         }
     });
 });

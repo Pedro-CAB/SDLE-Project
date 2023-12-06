@@ -125,6 +125,14 @@ function renderItems(items) {
         const listItem = document.createElement('li');
         listItem.textContent = `${item.itemName} - Amount: ${item.amountNeeded}`;
 
+        // Create an Edit button for each item
+        const editButton = document.createElement('button');
+        editButton.textContent = 'Edit';
+        editButton.addEventListener('click', () => editItem(item.idItem, item.idList, item.itemName, item.amountNeeded));
+
+        // Append the Edit button to the list item
+        listItem.appendChild(editButton);
+
         // Create a delete button for each item
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Delete';
@@ -143,8 +151,14 @@ function renderItems(items) {
     });
 }
 
+// Edit an item
+function editItem(itemId, listId, itemName, amountNeeded) {
+    // Redirect to the edit page with the item details as query parameters
+    window.location.href = `/pages/editItem.html?listId=${listId}&itemId=${itemId}&itemName=${encodeURIComponent(itemName)}&amountNeeded=${amountNeeded}`;
+}
 
-// Add a function to delete an item
+
+// Delete an item
 function deleteItem(itemId, listId) {
     if (confirm('Are you sure you want to delete this item?')) {
         // Send a request to the server to delete the item
