@@ -25,17 +25,19 @@ Setting up the packages should be done with just this command:
 npm install
 ```
 
-The dependencies that were installed for initial configuration were the ones specified in the commands below, but ``npm install`` should be enough to install everything on its own.
-```
-npm install express
-npm install sqlite3
-```
-
 To start the server, all you need to do is run:
 ```
 npm start
 ```
 
 The server is hosted in ``localhost:3000``. After running the server, you can [click here](http://localhost:3000) to see the website working in its current version.
+
+## Note For CRDT Implementation
+
+Check [addItem.js](/public/addItem.js) and also [server.js](/server.js):
+- [Endpoint for Creating List Item](/server.js#L233)
+- [Endpoint for Deleting List Item](/server.js#L250)
+- [Endpoint for Editing List Item](/server.js#L267)
+
 
 ## Documentation and Notes
