@@ -284,3 +284,19 @@ app.put('/api/editItem', (req, res) => {
         }
     });
 });
+
+// Add this endpoint to fetch the current user's information
+app.get('/api/currentUser', (req, res) => {
+    const userId = req.session.userId;
+
+    // Fetch user information based on the user ID
+    const query = 'SELECT name AS userName FROM User WHERE idUser = ?';
+    db.get(query, [userId], (err, user) => {
+        if (err) {
+            console.error(err.message);
+            res.status(500).json({ error: 'Internal Server Error' });
+        } else {
+            res.json({ userName: user ? user.userName : null });
+        }
+    });
+});

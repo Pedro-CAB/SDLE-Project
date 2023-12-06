@@ -65,7 +65,7 @@ function checkUserSession() {
                     // Use a Set to keep track of unique list names
                     const uniqueListNames = new Set();
 
-                    // Function to add click event listener to list item
+                    // Add click event listener to list item
                     const addClickListener = (list, listItem) => {
                         listItem.addEventListener('click', () => {
                             // Navigate to the itemList.html page with the selected list ID
@@ -275,3 +275,19 @@ function fetchListName(listNameElement, listId) {
         })
         .catch(error => console.error('Error fetching list name:', error));
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    // Fetch the user's name from the server
+    fetch('/api/currentUser')
+        .then(response => response.json())
+        .then(data => {
+            // Update the user container with the user's name
+            const userContainer = document.getElementById('userContainer');
+            if (userContainer) {
+                userContainer.innerHTML += `${data.userName}`;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching current user:', error);
+        });
+});
