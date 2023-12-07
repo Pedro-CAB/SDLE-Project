@@ -9,6 +9,7 @@
 <body>
     <div class="container" id="userContainer">
         <button type="button" onclick="logout()">Logout</button>
+        <button type="button" onclick="redirectToMyLists()">My Lists</button> <!-- New button -->
     </div>
     <div class="container">
         <h2 id="listName">Loading List Name...</h2>
@@ -17,5 +18,11 @@
     </div>
     <script src="/itemList.js"></script>
     <script src="/script.js"></script>
+    <script>
+        // Function to redirect to myLists.html
+        function redirectToMyLists() {
+            window.location.href = '/pages/myLists.html';
+        }
+    </script>
 </body>
 </html>
