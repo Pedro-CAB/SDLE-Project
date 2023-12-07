@@ -266,13 +266,13 @@ app.delete('/api/deleteItem/:itemId', (req, res) => {
 
 // Endpoint to handle item edits
 app.put('/api/editItem', (req, res) => {
-    const { itemId, newItemName, newAmountNeeded } = req.body;
+    const { itemId, newAmountNeeded } = req.body;
 
     console.log(req.body);
 
     // Update the item in the database
-    const updateItemQuery = 'UPDATE Item SET itemName = ?, amountNeeded = ? WHERE idItem = ?';
-    db.run(updateItemQuery, [newItemName, newAmountNeeded, itemId], function (err) {
+    const updateItemQuery = 'UPDATE Item SET amountNeeded = ? WHERE idItem = ?';
+    db.run(updateItemQuery, [newAmountNeeded, itemId], function (err) {
         if (err) {
             console.error('Error editing item:', err);
             res.status(500).json({ success: false, message: 'Internal server error' });
@@ -281,6 +281,23 @@ app.put('/api/editItem', (req, res) => {
             res.status(404).json({ success: false, message: 'Item not found' });
         } else {
             res.json({ success: true, message: 'Item edited successfully' });
+        }
+    });
+});
+
+
+// Add this endpoint to fetch the current user's information
+app.get('/api/currentUser', (req, res) => {
+    const userId = req.session.userId;
+
+    // Fetch user information based on the user ID
+    const query = 'SELECT name AS userName FROM User WHERE idUser = ?';
+    db.get(query, [userId], (err, user) => {
+        if (err) {
+            console.error(err.message);
+            res.status(500).json({ error: 'Internal Server Error' });
+        } else {
+            res.json({ userName: user ? user.userName : null });
         }
     });
 });

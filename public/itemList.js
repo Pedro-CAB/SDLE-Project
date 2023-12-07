@@ -16,7 +16,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
 // Add button to create a new item
-// Add button to create a new item
 if (createItemButton) {
     createItemButton.addEventListener('click', async () => {
         // Prompt the user for item details
