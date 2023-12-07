@@ -266,13 +266,13 @@ app.delete('/api/deleteItem/:itemId', (req, res) => {
 
 // Endpoint to handle item edits
 app.put('/api/editItem', (req, res) => {
-    const { itemId, newItemName, newAmountNeeded } = req.body;
+    const { itemId, newAmountNeeded } = req.body;
 
     console.log(req.body);
 
     // Update the item in the database
-    const updateItemQuery = 'UPDATE Item SET itemName = ?, amountNeeded = ? WHERE idItem = ?';
-    db.run(updateItemQuery, [newItemName, newAmountNeeded, itemId], function (err) {
+    const updateItemQuery = 'UPDATE Item SET amountNeeded = ? WHERE idItem = ?';
+    db.run(updateItemQuery, [newAmountNeeded, itemId], function (err) {
         if (err) {
             console.error('Error editing item:', err);
             res.status(500).json({ success: false, message: 'Internal server error' });
@@ -284,6 +284,7 @@ app.put('/api/editItem', (req, res) => {
         }
     });
 });
+
 
 // Add this endpoint to fetch the current user's information
 app.get('/api/currentUser', (req, res) => {
