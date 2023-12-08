@@ -32,11 +32,4 @@ npm start
 
 The server is hosted in ``localhost:3000``. After running the server, you can [click here](http://localhost:3000) to see the website working in its current version.
 
-## Note For CRDT Implementation
-
-Check [addItem.js](/public/addItem.js) and also [server.js](/server.js):
-- [Endpoint for Creating List Item](/server.js#L233)
-- [Endpoint for Deleting List Item](/server.js#L250)
-- [Endpoint for Editing List Item](/server.js#L267)
-
 ## Documentation and Notes
