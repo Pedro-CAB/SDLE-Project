@@ -26,5 +26,6 @@ CREATE TABLE Item(
 	idItem integer PRIMARY KEY NOT NULL,
     itemName varchar(30) NOT NULL,
     amountNeeded integer DEFAULT 1,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
     idList REFERENCES ShoppingList on update cascade on delete cascade
 );

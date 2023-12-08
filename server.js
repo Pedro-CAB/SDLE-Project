@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const sqlite3 = require('sqlite3').verbose();
 const md5 = require('md5');
+const moment = require('moment-timezone');
 
 const app = express();
 const port = 3000;
@@ -230,60 +231,136 @@ app.get('/api/listName', (req, res) => {
     });
 });
 
+// Initialize the Two-Phase Set
+const twoPhaseSet = {
+    added: new Set(),
+    removed: new Set(),
+};
+
+// Add an item to the Two-Phase Set for creation
+async function addItemToSet(itemName) {
+    twoPhaseSet.added.add(itemName);
+}
+
+// Add an item to the Two-Phase Set for removal
+async function removeItemFromSet(itemId) {
+    twoPhaseSet.removed.add(itemId);
+}
+
+// Clear the Two-Phase Set after processing
+function clearTwoPhaseSet() {
+    twoPhaseSet.added.clear();
+    twoPhaseSet.removed.clear();
+}
+
+
 // Endpoint for creating list items
-app.post('/api/createItem', (req, res) => {
+app.post('/api/createItem', async (req, res) => {
     const { itemName, itemAmount, listId } = req.body;
 
-    // Insert the new item into the Item table
-    const createItemQuery = 'INSERT INTO Item (itemName, amountNeeded, idList) VALUES (?, ?, ?)';
-    db.run(createItemQuery, [itemName, itemAmount, listId], function (err) {
-        if (err) {
-            console.error(err.message);
-            res.status(500).json({ success: false, message: 'Internal Server Error' });
-        } else {
-            // Send success response
-            res.json({ success: true, message: 'Item created successfully' });
-        }
-    });
+    try {
+        // Add the item to the Two-Phase Set for creation
+        await addItemToSet(itemName);
+        // Get the current timestamp in UTC
+        const timestamp = moment.utc().format();
+        // Convert the timestamp to London time zone
+        const timestampInDesiredTimezone = moment(timestamp).tz('Europe/London').format();
+        // Insert the new item into the Item table with the converted timestamp
+        await createItem(itemName, itemAmount, listId, timestampInDesiredTimezone);
+        // Clear the Two-Phase Set after processing
+        clearTwoPhaseSet();
+
+        res.json({ success: true, message: 'Item created successfully' });
+    } catch (error) {
+        console.error('Error creating item:', error);
+        // Clear the Two-Phase Set in case of an error
+        clearTwoPhaseSet();
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
 });
+
+// Creates a New Item For the Endpoint
+async function createItem(itemName, itemAmount, listId, timestamp) {
+    return new Promise((resolve, reject) => {
+        const query = 'INSERT INTO Item (itemName, amountNeeded, timestamp, idList) VALUES (?, ?, ?, ?)';
+        db.run(query, [itemName, itemAmount, timestamp, listId], function (err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+    });
+}
 
 // Endpoint to delete a specific item
-app.delete('/api/deleteItem/:itemId', (req, res) => {
+app.delete('/api/deleteItem/:itemId', async (req, res) => {
     const itemId = req.params.itemId;
 
-    // Delete the item from the Item table
-    const deleteItemQuery = 'DELETE FROM Item WHERE idItem = ?';
-    db.run(deleteItemQuery, [itemId], function (err) {
-        if (err) {
-            console.error(err.message);
-            res.status(500).json({ success: false, message: 'Internal Server Error' });
-        } else {
-            // Send success response
-            res.json({ success: true, message: 'Item deleted successfully' });
-        }
-    });
+    try {
+        // Add the item to the Two-Phase Set for removal
+        await removeItemFromSet(itemId);
+        // Delete the item from the Item table
+        await deleteItem(itemId);
+        // Clear the Two-Phase Set after processing
+        clearTwoPhaseSet();
+
+        res.json({ success: true, message: 'Item deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting item:', error);
+        // Clear the Two-Phase Set in case of an error
+        clearTwoPhaseSet();
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
 });
+
 
 // Endpoint to handle item edits
-app.put('/api/editItem', (req, res) => {
-    const { itemId, newAmountNeeded } = req.body;
+app.put('/api/editItem', async (req, res) => {
+    const { itemId, newAmountNeeded, timestamp } = req.body;
 
-    console.log(req.body);
-
-    // Update the item in the database
-    const updateItemQuery = 'UPDATE Item SET amountNeeded = ? WHERE idItem = ?';
-    db.run(updateItemQuery, [newAmountNeeded, itemId], function (err) {
-        if (err) {
-            console.error('Error editing item:', err);
-            res.status(500).json({ success: false, message: 'Internal server error' });
-        } else if (this.changes === 0) {
-            // No rows were affected, item not found
-            res.status(404).json({ success: false, message: 'Item not found' });
-        } else {
+    try {
+        // Update the amount needed using LWW Register
+        const existingAmount = await getAmountNeeded(itemId);
+        if (timestamp > existingAmount.timestamp) {
+            await updateAmountNeeded(itemId, newAmountNeeded, timestamp);
             res.json({ success: true, message: 'Item edited successfully' });
+        } else {
+            res.status(409).json({ success: false, message: 'Conflict - Timestamp not newer' });
         }
-    });
+    } catch (error) {
+        console.error('Error editing item:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
 });
+
+// Helper function to get the amount needed and timestamp for an item
+async function getAmountNeeded(itemId) {
+    return new Promise((resolve, reject) => {
+        const query = 'SELECT amountNeeded, timestamp FROM Item WHERE idItem = ?';
+        db.get(query, [itemId], (err, row) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({ amountNeeded: row.amountNeeded, timestamp: row.timestamp });
+            }
+        });
+    });
+}
+
+// Helper function to update the amount needed for an item
+async function updateAmountNeeded(itemId, newAmountNeeded, timestamp) {
+    return new Promise((resolve, reject) => {
+        const query = 'UPDATE Item SET amountNeeded = ?, timestamp = ? WHERE idItem = ?';
+        db.run(query, [newAmountNeeded, timestamp, itemId], function (err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+    });
+}
 
 
 // Add this endpoint to fetch the current user's information

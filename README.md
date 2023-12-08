@@ -39,5 +39,4 @@ Check [addItem.js](/public/addItem.js) and also [server.js](/server.js):
 - [Endpoint for Deleting List Item](/server.js#L250)
 - [Endpoint for Editing List Item](/server.js#L267)
 
-
 ## Documentation and Notes
