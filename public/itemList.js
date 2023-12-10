@@ -8,46 +8,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     const urlParams = new URLSearchParams(window.location.search);
     const listId = urlParams.get('listId');
 
-    // Global variable for timestamp generation
-    let currentTimestamp = 1;
-
-    // Function to generate a new timestamp
-    function generateTimestamp() {
-        return currentTimestamp++;
-    }
-
-    // Function to update the amount needed using LWW Register
-    async function updateAmountNeeded(itemId, newAmountNeeded) {
-        const timestamp = generateTimestamp();
-
-        try {
-            // Send the edited amount data to the server
-            const response = await fetch('/api/editItem', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    itemId: parseInt(itemId),
-                    newAmountNeeded: parseInt(newAmountNeeded),
-                    timestamp: timestamp,
-                }),
-            });
-
-            const result = await response.json();
-            if (result.success) {
-                // Update the displayed amount if the server operation is successful
-                const amountNeededElement = document.getElementById(`amountNeeded-${itemId}`);
-                amountNeededElement.innerText = newAmountNeeded;
-            } else {
-                alert(result.message);
-            }
-        } catch (error) {
-            console.error('Error updating amount needed:', error);
-            alert('Error updating amount needed. Check console for details.');
-        }
-    }
-
     // Add button to redirect to Add Item page
     if (addItemButton) {
         addItemButton.addEventListener('click', () => {
@@ -219,13 +179,43 @@ async function fetchListName(listNameElement) {
     }
 }
 
+// Function to update the amount needed using LWW Register
+async function updateAmountNeeded(itemId, newAmountNeeded) {
+    const timestamp = generateTimestamp();
 
+    try {
+        // Send the edited amount data to the server
+        const response = await fetch('/api/editItem', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                itemId: parseInt(itemId),
+                newAmountNeeded: parseInt(newAmountNeeded),
+                timestamp: timestamp,
+            }),
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            // Update the displayed amount if the server operation is successful
+            const amountNeededElement = document.getElementById(`amountNeeded-${itemId}`);
+            amountNeededElement.innerText = newAmountNeeded;
+        } else {
+            alert(result.message);
+        }
+    } catch (error) {
+        console.error('Error updating amount needed:', error);
+        alert('Error updating amount needed. Check console for details.');
+    }
+}
 
 // Function to edit the amount needed for an item
-function editAmountNeeded(itemId) {
+async function editAmountNeeded(itemId) {
     const newAmountNeeded = prompt('Enter the new amount needed:');
     if (newAmountNeeded !== null) {
-        updateAmountNeeded(itemId, newAmountNeeded);
+        await updateAmountNeeded(itemId, newAmountNeeded);
     }
 }
 
@@ -270,4 +260,10 @@ async function deleteItem(itemId, listId) {
             alert('Error deleting or fetching items. Check console for details.');
         }
     }
+}
+
+// Generate a new timestamp
+function generateTimestamp() {
+    const timestamp = moment.utc().tz('Europe/London').format();
+    return timestamp;
 }

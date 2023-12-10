@@ -326,6 +326,8 @@ app.put('/api/editItem', async (req, res) => {
     try {
         // Update the amount needed using LWW Register
         const existingAmount = await getAmountNeeded(itemId);
+        console.log("Old Timestamp: " + existingAmount.timestamp)
+        console.log("New Timestamp: " + timestamp)
         if (timestamp > existingAmount.timestamp) {
             await updateAmountNeeded(itemId, newAmountNeeded, timestamp);
             res.json({ success: true, message: 'Item edited successfully' });
