@@ -10,16 +10,20 @@
     <div class = "container">
         <h1>Create Account</h1>
         <form id="createAccountForm">
-            <label for="name">Name:</label>
-            <input type="text" id="name" name="name" required><br>
-
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" required><br>
-
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required><br>
-
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" placeholder="Name" required><br>
+            </div>
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" placeholder="Username" required><br>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" placeholder="Password" required><br>
+            </div>
             <button type="button" onclick="createAccount()">Create Account</button>
+            <button type="button" onclick="redirectToLogin()">I already have an account.</button>
         </form>
         <p id="createAccountMessage"></p>
     </div>

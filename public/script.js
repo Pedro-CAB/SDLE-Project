@@ -96,6 +96,10 @@ function checkUserSession() {
     }
 }
 
+function redirectToLogin(){
+    window.location.href = '/pages/login.html';
+}
+
 function logout() {
     // Clear user session data
     sessionStorage.removeItem('userId');
