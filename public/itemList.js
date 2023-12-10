@@ -140,8 +140,8 @@ function renderItems(items) {
         // Render item details including amount needed
         listItem.innerHTML = `
             <span>${item.itemName} - Amount: <span id="amountNeeded-${item.idItem}">${item.amountNeeded}</span></span>
-            <button onclick="editAmountNeeded(${item.idItem})">Edit Amount</button>
-            <button onclick="deleteItem(${item.idItem}, ${item.idList})">Delete</button>
+            <button class="itemButton" onclick="editAmountNeeded(${item.idItem})">Edit</button>
+            <button class="itemButton" onclick="deleteItem(${item.idItem}, ${item.idList})">Delete</button>
         `;
 
         // Append the list item to the itemListElement
