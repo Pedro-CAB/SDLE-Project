@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">Loading List Name...</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #121212;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-image: linear-gradient(to right, #0f0c29, #302b63, #24243e);
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            max-width: 350px;
+            width: 100%;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            margin: 10px 0;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        button {
+            width: calc(100% - 40px); /* account for padding */
+            padding: 12px 20px;
+            background-color: #BB86FC;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #3700B3;
+        }
+
+        /* Additional styles can be added here */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button type="button" onclick="logout()">Logout</button>
+    </div>
+    <div class="container">
+        <h2 id="listName">Loading List Name...</h2>
+        <ul id="itemList"></ul>
+        <button id="createItemButton">Create New Item</button>
+    </div>
+    <script src="/itemList.js"></script>
+    <script src="/script.js"></script>
+</body>
+</html>

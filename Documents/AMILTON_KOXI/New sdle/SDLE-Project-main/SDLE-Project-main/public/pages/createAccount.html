@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account</title>
+    <style>
+         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap');
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif;
+    background-color: #121212;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-image: linear-gradient(to right, #0f0c29, #302b63, #24243e);
+}
+
+.card {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    max-width: 350px;
+    width: 100%;
+    color: #fff;
+    text-align: center;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+input[type="text"],
+input[type="password"] {
+    width: calc(100% - 20px); /* account for padding */
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #1f1f1f;
+    border: 1px solid #333;
+    border-radius: 5px;
+    color: #fff;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+    border-color: #BB86FC;
+}
+
+button {
+    width: calc(100% - 20px); /* account for padding */
+    padding: 12px 20px;
+    background-color: #BB86FC;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #3700B3;
+}
+
+.login-link {
+    color: #BB86FC;
+    margin-top: 20px;
+    display: block;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.login-link:hover {
+    text-decoration: underline;
+}
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Create Account</h1>
+        <form id="createAccountForm">
+            <div class="form-group">
+                <input type="text" id="name" name="name" placeholder="Name" required>
+            </div>
+            <div class="form-group">
+                <input type="text" id="username" name="username" placeholder="Username" required>
+            </div>
+            <div class="form-group">
+                <input type="password" id="password" name="password" placeholder="Password" required>
+            </div>
+            <button type="button" onclick="createAccount()">Create Account</button>
+        </form>
+        <a href="login.html" class="login-link">Already have an account? Login here</a>
+        <p id="message"></p>
+    </div>
+
+    <script>
+        function createAccount() {
+            var username = document.getElementById("username").value;
+            var password = document.getElementById("password").value;
+
+            if (username === "existingUser" && password === "password") { // Exemplo condicional
+                document.getElementById("message").textContent = "You already have an account.";
+                setTimeout(function() {
+                    window.location.href = 'login.html'; // Redireciona para o login
+                }, 2000); // Espera 2 segundos antes de redirecionar
+            } else {
+                window.location.href = 'createShoppingList.html'; // Certifique-se de que este caminho está correto
+            }
+        }
+    </script>
+</body>
+</html>
