@@ -1,8 +1,12 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
     const listNameElement = document.getElementById('listName');
     const itemListElement = document.getElementById('itemList');
     const addItemButton = document.getElementById('addItemButton');
     const createItemButton = document.getElementById('createItemButton');
+
+    // Get the list ID from the query parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const listId = urlParams.get('listId');
 
     // Global variable for timestamp generation
     let currentTimestamp = 1;
@@ -98,59 +102,70 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Add event listener for delete buttons
     if (itemListElement) {
-        itemListElement.addEventListener('click', (event) => {
+        itemListElement.addEventListener('click', async (event) => {
             const deleteButton = event.target.closest('.delete-button');
             if (deleteButton) {
                 const itemId = deleteButton.dataset.itemId;
 
                 // Send a request to delete the item
-                fetch(`/api/deleteItem/${itemId}`, {
-                    method: 'DELETE',
-                })
-                .then(response => response.json())
-                .then(result => {
+                try {
+                    const response = await fetch(`/api/deleteItem/${itemId}`, {
+                        method: 'DELETE',
+                    });
+
+                    const result = await response.json();
                     // Log the result for debugging
                     console.log('Item deletion result:', result);
 
-                    // Fetch the updated list from the server after deleting the item
-                    return fetch(`/api/items?listId=${listId}`);
-                })
-                .then(response => response.json())
-                .then(data => {
-                    // Log the data received from the server
-                    console.log('Updated item list after deletion:', data);
+                    if (result.success) {
+                        // Delete the item from the UI
+                        const listItemElement = document.getElementById(`item-${itemId}`);
+                        if (listItemElement) {
+                            listItemElement.remove();
+                        }
 
-                    // Render the updated list on the page
-                    renderItems(data);
-                })
-                .catch(error => {
+                        // Log the data received from the server
+                        console.log('Item deleted successfully. Fetching updated item list ' + listId);
+
+                        // Fetch the updated list from the server after deletion
+                        const updatedListResponse = await fetch(`/api/items?listId=${listId}`);
+                        const updatedListData = await updatedListResponse.json();
+
+                        // Log the updated data received from the server
+                        console.log('Updated item list after deletion:', updatedListData);
+
+                        // Render the updated list on the page
+                        renderItems(updatedListData);
+                    } else {
+                        // Display an alert if the deletion was not successful
+                        alert(result.message || 'Error deleting item. Check console for details.');
+                    }
+                } catch (error) {
                     console.error('Error deleting or fetching items:', error);
                     alert('Error deleting or fetching items. Check console for details.');
-                });
+                }
             }
         });
     }
 
-    // Fetch items for the specific shopping list after the DOM has loaded
-    const urlParams = new URLSearchParams(window.location.search);
-    const listId = urlParams.get('listId');
-    fetch(`/api/items?listId=${listId}`)
-        .then(response => response.json())
-        .then(data => {
-            // Log the initial data received from the server
-            console.log('Initial item list:', data);
+    try {
+        // Fetch items for the specific shopping list after the DOM has loaded
+        const response = await fetch(`/api/items?listId=${listId}`);
+        const data = await response.json();
 
-            // Render items on the page
-            renderItems(data);
-        })
-        .catch(error => {
-            console.error('Error fetching initial items:', error);
-            alert('Error fetching initial items. Check console for details.');
-        });
+        // Log the initial data received from the server
+        console.log('Initial item list:', data);
 
-    // Fetch the list name
-    if (listNameElement) {
-        fetchListName(listNameElement);
+        // Render items on the page
+        renderItems(data);
+
+        // Fetch the list name
+        if (listNameElement) {
+            fetchListName(listNameElement);
+        }
+    } catch (error) {
+        console.error('Error fetching initial items:', error);
+        alert('Error fetching initial items. Check console for details.');
     }
 });
 
@@ -166,7 +181,7 @@ function renderItems(items) {
         listItem.innerHTML = `
             <span>${item.itemName} - Amount: <span id="amountNeeded-${item.idItem}">${item.amountNeeded}</span></span>
             <button onclick="editAmountNeeded(${item.idItem})">Edit Amount</button>
-            <button onclick="deleteItem(${item.idItem})">Delete</button>
+            <button onclick="deleteItem(${item.idItem}, ${item.idList})">Delete</button>
         `;
 
         // Append the list item to the itemListElement
@@ -174,53 +189,19 @@ function renderItems(items) {
     });
 }
 
-// Edit an item's amount needed
-async function editAmountNeeded(itemId) {
-    const newAmountNeeded = prompt('Enter the new amount needed:');
-    if (newAmountNeeded !== null) {
-        // Update the amount needed using LWW Register
-        await updateAmountNeeded(itemId, newAmountNeeded);
-    }
-}
-
-// Delete an item
-function deleteItem(itemId) {
-    if (confirm('Are you sure you want to delete this item?')) {
-        // Send a request to the server to delete the item
-        fetch(`/api/deleteItem/${itemId}`, {
-            method: 'DELETE',
-        })
-        .then(response => response.json())
-        .then(result => {
-            // Log the result for debugging
-            console.log('Item deletion result:', result);
-
-            // Fetch the updated list from the server after deleting
-            return fetch(`/api/items?listId=${listId}`);
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Log the data received from the server
-            console.log('Updated item list:', data);
-
-            // Render the updated list on the page
-            renderItems(data);
-        })
-        .catch(error => {
-            console.error('Error deleting or fetching items:', error);
-            alert('Error deleting or fetching items. Check console for details.');
-        });
-    }
-}
-
-function fetchListName(listNameElement) {
-    // Fetch the list name from the server
+async function fetchListName(listNameElement) {
+    // Get the list ID from the query parameters
     const urlParams = new URLSearchParams(window.location.search);
     const listId = urlParams.get('listId');
 
-    fetch(`/api/listName?listId=${listId}`)
-        .then(response => response.json())
-        .then(data => {
+    console.log("List ID during fetchListName:", listId);  // Retained console.log
+
+    if (listId) {
+        // Fetch the list name from the server
+        try {
+            const response = await fetch(`/api/listName?listId=${listId}`);
+            const data = await response.json();
+
             // Log the list name data received from the server
             console.log('List name data:', data);
 
@@ -228,9 +209,65 @@ function fetchListName(listNameElement) {
             if (listNameElement) {
                 listNameElement.textContent = data.listName;
             }
-        })
-        .catch(error => {
+        } catch (error) {
             console.error('Error fetching list name:', error);
             alert('Error fetching list name. Check console for details.');
-        });
+        }
+    } else {
+        console.error('List ID is undefined.');
+        alert('List ID is undefined. Check console for details.');
+    }
+}
+
+
+
+// Function to edit the amount needed for an item
+function editAmountNeeded(itemId) {
+    const newAmountNeeded = prompt('Enter the new amount needed:');
+    if (newAmountNeeded !== null) {
+        updateAmountNeeded(itemId, newAmountNeeded);
+    }
+}
+
+// Function to delete an item
+async function deleteItem(itemId, listId) {
+    if (confirm('Are you sure you want to delete this item?')) {
+        // Send a request to delete the item
+        try {
+            const response = await fetch(`/api/deleteItem/${itemId}`, {
+                method: 'DELETE',
+            });
+
+            const result = await response.json();
+            // Log the result for debugging
+            console.log('Item deletion result:', result);
+
+            if (result.success) {
+                // Delete the item from the UI
+                const listItemElement = document.getElementById(`item-${itemId}`);
+                if (listItemElement) {
+                    listItemElement.remove();
+                }
+
+                // Log the data received from the server
+                console.log('Item deleted successfully. Fetching updated item list ' + listId);
+
+                // Fetch the updated list from the server after deletion
+                const updatedListResponse = await fetch(`/api/items?listId=${listId}`);
+                const updatedListData = await updatedListResponse.json();
+
+                // Log the updated data received from the server
+                console.log('Updated item list after deletion:', updatedListData);
+
+                // Render the updated list on the page
+                renderItems(updatedListData);
+            } else {
+                // Display an alert if the deletion was not successful
+                alert(result.message || 'Error deleting item. Check console for details.');
+            }
+        } catch (error) {
+            console.error('Error deleting or fetching items:', error);
+            alert('Error deleting or fetching items. Check console for details.');
+        }
+    }
 }

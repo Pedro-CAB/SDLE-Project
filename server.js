@@ -300,19 +300,23 @@ app.delete('/api/deleteItem/:itemId', async (req, res) => {
     try {
         // Add the item to the Two-Phase Set for removal
         await removeItemFromSet(itemId);
-        // Delete the item from the Item table
-        await deleteItem(itemId);
-        // Clear the Two-Phase Set after processing
-        clearTwoPhaseSet();
 
-        res.json({ success: true, message: 'Item deleted successfully' });
+        // Delete the item from the Item table based on itemId
+        const deleteItemQuery = 'DELETE FROM Item WHERE idItem = ?';
+        db.run(deleteItemQuery, [itemId], function (err) {
+            if (err) {
+                console.error(err.message);
+                res.status(500).json({ success: false, message: 'Internal Server Error' });
+            } else {
+                res.json({ success: true, message: 'Item deleted successfully' });
+            }
+        });
     } catch (error) {
         console.error('Error deleting item:', error);
-        // Clear the Two-Phase Set in case of an error
-        clearTwoPhaseSet();
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 });
+
 
 
 // Endpoint to handle item edits
