@@ -6,6 +6,7 @@ const session = require('express-session');
 const sqlite3 = require('sqlite3').verbose();
 const md5 = require('md5');
 const moment = require('moment-timezone');
+const zmq = require('zeromq');
 
 const app = express();
 const port = 3000;
@@ -21,6 +22,10 @@ app.use(session({
 
 // Connect to the SQLite database
 const db = new sqlite3.Database('db.db');
+
+// Local ZMQ backend socket
+app.locals.backend_socket = zmq.socket('dealer')
+app.locals.current_list = ""
 
 // Serve static files from the public directory
 app.use(express.static('public'));
@@ -80,8 +85,11 @@ app.get('/api/items', (req, res) => {
     const query = 'SELECT * FROM Item WHERE idList = ?';
     console.log('Executing query:', query, 'with parameters:', [listId]);
 
+    // Save current viewed list
+    app.locals.current_list = listId.toString()
+
     // Fetch items for the specified shopping list from the database
-    db.all(query, [parseInt(listId)], (err, rows) => {
+    db.all(query, [parseInt(listId)], async (err, rows) => {
         if (err) {
             console.error(err.message);
             res.status(500).send('Internal Server Error');
@@ -94,6 +102,7 @@ app.get('/api/items', (req, res) => {
                 idList: item.idList
             }));
 
+            await synchronizeItems(itemsWithAmount)
             res.json(itemsWithAmount);
         }
     });
@@ -122,6 +131,10 @@ app.post('/api/login', (req, res) => {
                 req.session.userId = user.idUser;
 
                 console.log('User ID stored in session:', req.session.userId); // Add this line for debugging
+
+                // Set backend ZMQ socket identity to current logged username
+                app.locals.backend_socket.identity = username
+                app.locals.backend_socket.connect('tcp://localhost:5559')
 
                 // Send success response with user ID and username
                 res.json({ success: true, userId: user.idUser, username: user.username });
@@ -311,6 +324,7 @@ app.delete('/api/deleteItem/:itemId', async (req, res) => {
                 res.json({ success: true, message: 'Item deleted successfully' });
             }
         });
+        await sendBackend("DELETE", itemId)
     } catch (error) {
         console.error('Error deleting item:', error);
         res.status(500).json({ success: false, message: 'Internal Server Error' });
@@ -330,6 +344,7 @@ app.put('/api/editItem', async (req, res) => {
         console.log("New Timestamp: " + timestamp)
         if (timestamp > existingAmount.timestamp) {
             await updateAmountNeeded(itemId, newAmountNeeded, timestamp);
+            await sendBackend("WRITE", itemId, newAmountNeeded);
             res.json({ success: true, message: 'Item edited successfully' });
         } else {
             res.status(409).json({ success: false, message: 'Conflict - Timestamp not newer' });
@@ -368,7 +383,6 @@ async function updateAmountNeeded(itemId, newAmountNeeded, timestamp) {
     });
 }
 
-
 // Add this endpoint to fetch the current user's information
 app.get('/api/currentUser', (req, res) => {
     const userId = req.session.userId;
@@ -384,3 +398,43 @@ app.get('/api/currentUser', (req, res) => {
         }
     });
 });
+
+async function sendBackend(operation, itemId, amountNeeded) {
+    data_key = app.locals.current_list + itemId.toString()
+    data = {}
+    data[data_key] = amountNeeded || 0
+    app.locals.backend_socket.send([Buffer.from(""), Buffer.from(operation), Buffer.from(JSON.stringify(data))])
+    return new Promise((resolve, reject) => resolve())
+}
+
+async function synchronizeItems(items) {
+    itemsToWrite = []
+    for (const item of items) {
+        const amount = await readBackend(item.idItem, true)
+        if (amount === null)
+            itemsToWrite.push(item)
+        else
+            item.amountNeeded = parseInt(amount)
+    }
+    for (const item of itemsToWrite) {
+        await sendBackend("WRITE", item.idItem, item.amountNeeded)
+    }
+}
+
+
+async function readBackend(itemId) {
+    data_key = app.locals.current_list + itemId.toString()
+    app.locals.backend_socket.send([Buffer.from(""), Buffer.from("READ"), Buffer.from(data_key)])
+
+    return new Promise((resolve, reject) =>
+        app.locals.backend_socket.on("message", function(empty, reply) {
+            reply_str = reply.toString()
+            console.log("RECEIVED MESSAGE: " + reply_str)
+            if (reply_str === "ERROR") {
+                console.log("ERROR FETCHING DATA")
+                resolve(null)
+            } else
+                resolve(reply_str)
+
+    }))
+}

@@ -21,6 +21,7 @@ MIN_READS = 1
 
 logger = logging.getLogger(__name__)
 file_lock = Lock()
+request_lock = Lock()
 node_dir = 'node_data'
 
 class Peer:
@@ -107,28 +108,32 @@ class Peer:
         peer_to_route = preference_list.pop(0)
         if peer_to_route == str(self.node.uuid().int):
             logger.debug(f"COORDINATING REQUEST {content_hash}.")
-            self.handle_request(message)
+            Thread(target=self.handle_request(message)).start()
         else:
             logger.debug(f"ROUTING REQUEST {content_hash} to peer {peer_to_route}.")
             self.node.whisper(uuid.UUID(int=int(peer_to_route)), f"REQ {message}")
 
     def handle_request(self, request):
         client, empty, operation, content = request[:4]
-        stored_data = self.read_from_file('storage')
-        if operation.decode('utf-8') == "WRITE":
-            content_hash = hash.hash_value(list(json.loads(content).keys())[0])
-        else:
-            content_hash = hash.hash_value(content.decode('utf-8'))
-        if operation.decode('utf-8') == "WRITE":
-            if not stored_data:
-                stored_data = dict()
-            stored_data[content_hash] = list(json.loads(content).values())[0]
-            self.write_to_file('storage', stored_data)
-        elif operation.decode('utf-8') == "READ":
-            if not stored_data:
-                self.lbSocket.send_multipart([empty, client, empty, b"ERROR FETCHING DATA"])
+        with request_lock:
+            stored_data = self.read_from_file('storage')
+            if operation.decode('utf-8') == "WRITE" or operation.decode('utf-8') == "DELETE":
+                content_hash = hash.hash_value(list(json.loads(content).keys())[0])
             else:
-                self.lbSocket.send_multipart([empty, client, empty, json.dumps(stored_data[str(content_hash)]).encode('utf-8')]) 
+                content_hash = hash.hash_value(content.decode('utf-8'))
+            if operation.decode('utf-8') == "WRITE":
+                if not stored_data:
+                    stored_data = dict()
+                stored_data[str(content_hash)] = list(json.loads(content).values())[0]
+                self.write_to_file('storage', stored_data)
+            elif operation.decode('utf-8') == "READ":
+                if not stored_data or str(content_hash) not in stored_data.keys():
+                    self.lbSocket.send_multipart([empty, client, empty, b"ERROR"])
+                else:
+                    self.lbSocket.send_multipart([empty, client, empty, json.dumps(stored_data[str(content_hash)]).encode('utf-8')]) 
+            elif operation.decode('utf-8') == "DELETE":
+                del stored_data[str(content_hash)]
+                self.write_to_file('storage', stored_data)
 
     def get_preference_list(self, hash_value):
         preference_lists = self.read_from_file('preference_lists')
@@ -195,7 +200,7 @@ class Peer:
                 if content_parts[1] == "RETURN":
                     self.reassign_tokens(list(map(int, content_parts[2:])))
             if content_parts[0] == "REQ":
-                    self.handle_request(content_parts[1:])
+                    Thread(target=self.handle_request(content_parts[1:])).start()
         elif msg_type.decode('utf-8') == "ENTER":
             headers = json.loads(cmds[0].decode('utf-8'))
             logger.debug(f"NODE_MSG HEADERS: {headers}")

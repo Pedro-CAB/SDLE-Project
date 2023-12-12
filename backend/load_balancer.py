@@ -58,7 +58,6 @@ def main(ctx, pipe):
     #    start(worker_task, i)
 
     # Initialize main loop state
-    count = NBR_CLIENTS
     backend_ready = False
     workers = []
     poller = zmq.Poller()
@@ -68,7 +67,6 @@ def main(ctx, pipe):
 
     while True:
         sockets = dict(poller.poll())
-
         if pipe in sockets:
             message = pipe.recv_multipart()
             if message[0].decode('utf-8') == "$TERM":
@@ -86,7 +84,6 @@ def main(ctx, pipe):
             # Handle worker activity on the backend
             request = backend.recv_multipart()
             worker, empty, client = request[:3]
-            print(request)
             if worker not in workers:
                 workers.append(worker)
             logger.debug(f"BACKEND_MSG: {request}")
@@ -102,18 +99,15 @@ def main(ctx, pipe):
                 backend_ready = True
             if client != b"READY" and len(request) > 3:
                 # If client reply, send rest back to frontend
-                print(request)
                 empty, reply = request[3:]
                 frontend.send_multipart([client, b"", reply])
-                count -= 1
-                if not count:
-                    break
-
         if frontend in sockets:
             # Get next client request, route to last-used worker
-            client, empty, request = frontend.recv_multipart()
-            worker = workers.pop(0)
-            backend.send_multipart([worker, b"", client, b"", request])
+            request = frontend.recv_multipart()
+            logger.debug(f"FRONTEND_MSG: {request}")
+            client, empty, operation, content = request
+            worker = choice(workers)
+            backend.send_multipart([worker, client, b"", operation, content])
             if not workers:
                 # Don't poll clients if no workers are available and set backend_ready flag to false
                 poller.unregister(frontend)
