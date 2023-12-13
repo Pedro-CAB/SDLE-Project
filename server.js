@@ -7,6 +7,9 @@ const sqlite3 = require('sqlite3').verbose();
 const md5 = require('md5');
 const moment = require('moment-timezone');
 const zmq = require('zeromq');
+const EventEmitter = require('eventemitter3')
+const emitter = new EventEmitter()
+
 
 const app = express();
 const port = 3000;
@@ -147,7 +150,7 @@ app.post('/api/login', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+    console.log(`Server is running on port ${port}`);
 });
 
 // Serve createAccount.html
@@ -399,6 +402,17 @@ app.get('/api/currentUser', (req, res) => {
     });
 });
 
+app.post('/api/syncItems', async (req, res) => {
+    const item = req.body
+    const syncAmount = await readBackend(item.idItem)
+    if (syncAmount === null)
+        res.json({amount: "DELETE"})
+    else
+        res.json({amount: syncAmount})
+
+    
+})
+
 async function sendBackend(operation, itemId, amountNeeded) {
     data_key = app.locals.current_list + itemId.toString()
     data = {}
@@ -410,7 +424,7 @@ async function sendBackend(operation, itemId, amountNeeded) {
 async function synchronizeItems(items) {
     itemsToWrite = []
     for (const item of items) {
-        const amount = await readBackend(item.idItem, true)
+        const amount = await readBackend(item.idItem)
         if (amount === null)
             itemsToWrite.push(item)
         else
@@ -429,7 +443,6 @@ async function readBackend(itemId) {
     return new Promise((resolve, reject) =>
         app.locals.backend_socket.on("message", function(empty, reply) {
             reply_str = reply.toString()
-            console.log("RECEIVED MESSAGE: " + reply_str)
             if (reply_str === "ERROR") {
                 console.log("ERROR FETCHING DATA")
                 resolve(null)

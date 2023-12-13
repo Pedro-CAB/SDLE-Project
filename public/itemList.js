@@ -123,6 +123,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (listNameElement) {
             fetchListName(listNameElement);
         }
+
     } catch (error) {
         console.error('Error fetching initial items:', error);
         alert('Error fetching initial items. Check console for details.');
@@ -146,7 +147,32 @@ function renderItems(items) {
 
         // Append the list item to the itemListElement
         itemListElement.appendChild(listItem);
+
+        // Set sync function for the items
+        syncItem(item)
     });
+}
+
+function syncItem(item) {
+    setInterval(async function() {
+        const response = await fetch('/api/syncItems', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(item),
+        });
+        const result = await response.json();
+        if (result.amount !== null) {
+            item.amountNeeded = result.amount
+            const listItem = document.getElementById(`item-${item.idItem}`)
+            listItem.innerHTML = `
+            <span>${item.itemName} - Amount: <span id="amountNeeded-${item.idItem}">${item.amountNeeded}</span></span>
+            <button class="itemButton" onclick="editAmountNeeded(${item.idItem})">Edit</button>
+            <button class="itemButton" onclick="deleteItem(${item.idItem}, ${item.idList})">Delete</button>
+        `;
+        }
+    }, 2000)
 }
 
 async function fetchListName(listNameElement) {
