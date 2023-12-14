@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         // Render items on the page
         renderItems(data);
-
+       
         // Fetch the list name
         if (listNameElement) {
             fetchListName(listNameElement);
@@ -144,35 +144,29 @@ function renderItems(items) {
             <button class="itemButton" onclick="editAmountNeeded(${item.idItem})">Edit</button>
             <button class="itemButton" onclick="deleteItem(${item.idItem}, ${item.idList})">Delete</button>
         `;
-
         // Append the list item to the itemListElement
         itemListElement.appendChild(listItem);
-
-        // Set sync function for the items
-        syncItem(item)
     });
 }
 
 function syncItem(item) {
-    setInterval(async function() {
-        const response = await fetch('/api/syncItems', {
+    fetch('/api/syncItems', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(item),
-        });
-        const result = await response.json();
-        if (result.amount !== null) {
-            item.amountNeeded = result.amount
-            const listItem = document.getElementById(`item-${item.idItem}`)
-            listItem.innerHTML = `
-            <span>${item.itemName} - Amount: <span id="amountNeeded-${item.idItem}">${item.amountNeeded}</span></span>
-            <button class="itemButton" onclick="editAmountNeeded(${item.idItem})">Edit</button>
-            <button class="itemButton" onclick="deleteItem(${item.idItem}, ${item.idList})">Delete</button>
-        `;
-        }
-    }, 2000)
+    })
+    .then(response => response.json())
+    .then((result) => {
+        console.log(result)
+        if (result.amount !== null)
+            if (result.amount !== "DELETED") {
+                if (parseInt(result.amount) !== item.amountNeeded)
+                    updateAmountNeeded(result.idItem, result.amount)
+            } else 
+                deleteItem(result.idItem, item.idList)
+    })
 }
 
 async function fetchListName(listNameElement) {
@@ -293,3 +287,66 @@ function generateTimestamp() {
     const timestamp = moment.utc().tz('Europe/London').format();
     return timestamp;
 }
+
+async function syncList() {
+    // Get the list ID from the query parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const listId = urlParams.get('listId');
+
+    const response = await fetch('/api/syncList', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({listId: listId}),
+    })
+    const result = await response.json()
+    if (result === "NO DATA") {
+        const items = await fetch(`/api/items?listId=${listId}`);
+        const data = await items.json();
+        data.forEach((item) => {
+            console.log(item)
+            const success = fetch('/api/writeToBackend', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(item),
+            })
+        })
+    } else if (result !== "ERROR") {
+        const items = await fetch(`/api/items?listId=${listId}`);
+        const data = await items.json();
+        
+        // Check if items exist in backend but not in local storage to add them
+        result.forEach( async (bItem) => {
+            if (data.every((lItem) => bItem.idItem !== lItem.idItem && bItem.idList !== lItem.idList)) {
+                console.log("new item")
+                const response = await fetch('/api/createItem', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        itemName: bItem.itemName,
+                        itemAmount: bItem.amountNeeded,
+                        listId: bItem.listId,
+                        timestamp: bItem.timestamp
+                    }),
+                });
+                const result = await response.json()
+            }           
+            // Fetch the updated list from the server after creating the item
+            const updatedListResponse = await fetch(`/api/items?listId=${listId}`);
+            const updatedListData = await updatedListResponse.json();
+
+            // Log the data received from the server
+            console.log('Updated item list:', updatedListData);
+
+            // Render the updated list on the page
+            renderItems(updatedListData);
+        })
+    }
+}
+
+setInterval(syncList, 2500);

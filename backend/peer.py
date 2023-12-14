@@ -31,6 +31,7 @@ class Peer:
         self.num_replicas = num_replicas
         self.lbSocket = None
         self.tokens = list()
+        self.ready = False
 
     def setup(self, ctx, pipe):
         self.pipe = pipe
@@ -96,7 +97,11 @@ class Peer:
         self.node.stop()
 
     def route_message(self, message):
+        if not self.ready:
+            return
+        
         client, empty, operation, content = message[:4]
+        print(content)
         if operation.decode('utf-8') == "WRITE":
             content_hash = hash.hash_value(list(json.loads(content).keys())[0])
         else:
@@ -111,28 +116,38 @@ class Peer:
             Thread(target=self.handle_request(message)).start()
         else:
             logger.debug(f"ROUTING REQUEST {content_hash} to peer {peer_to_route}.")
-            self.node.whisper(uuid.UUID(int=int(peer_to_route)), f"REQ {message}")
+            self.node.whisper(uuid.UUID(int=int(peer_to_route)), f"REQ {client} {empty} {operation} {content}".encode('utf-8'))
 
     def handle_request(self, request):
+        if not self.ready:
+            return
+        
         client, empty, operation, content = request[:4]
+        print(content)
         with request_lock:
             stored_data = self.read_from_file('storage')
+            item = json.loads(content)
             if operation.decode('utf-8') == "WRITE" or operation.decode('utf-8') == "DELETE":
-                content_hash = hash.hash_value(list(json.loads(content).keys())[0])
+                content_hash = hash.hash_value(str(item["idList"]))
             else:
                 content_hash = hash.hash_value(content.decode('utf-8'))
             if operation.decode('utf-8') == "WRITE":
                 if not stored_data:
                     stored_data = dict()
-                stored_data[str(content_hash)] = list(json.loads(content).values())[0]
+                if str(content_hash) not in stored_data.keys():
+                    stored_data[str(content_hash)] = dict()
+                    stored_data[str(content_hash)][str(item["idList"])] = dict()
+                stored_data[str(content_hash)][str(item["idList"])][str(item["idItem"])] = item
                 self.write_to_file('storage', stored_data)
             elif operation.decode('utf-8') == "READ":
                 if not stored_data or str(content_hash) not in stored_data.keys():
-                    self.lbSocket.send_multipart([empty, client, empty, b"ERROR"])
+                    self.lbSocket.send_multipart([empty, client, empty, content, b"NO DATA"])
                 else:
-                    self.lbSocket.send_multipart([empty, client, empty, json.dumps(stored_data[str(content_hash)]).encode('utf-8')]) 
+                    item_list = [item for item in stored_data[str(content_hash)][str(item)].values()]
+                    self.lbSocket.send_multipart([empty, client, empty, content, json.dumps(item_list).encode('utf-8')]) 
             elif operation.decode('utf-8') == "DELETE":
-                del stored_data[str(content_hash)]
+                # TODO: delete item or whole list
+                del stored_data[str(content_hash)][str(item["idList"])][str(item["idItem"])]
                 self.write_to_file('storage', stored_data)
 
     def get_preference_list(self, hash_value):
@@ -221,6 +236,7 @@ class Peer:
         partitions = dict()
         partitions[str(self.node.uuid().int)] = self.tokens
         self.write_to_file('partitions', partitions)
+        self.ready = True
         
     def reassign_tokens(self, tokens):
         partitions = self.read_from_file('partitions')

@@ -7,8 +7,6 @@ const sqlite3 = require('sqlite3').verbose();
 const md5 = require('md5');
 const moment = require('moment-timezone');
 const zmq = require('zeromq');
-const EventEmitter = require('eventemitter3')
-const emitter = new EventEmitter()
 
 
 const app = express();
@@ -80,7 +78,7 @@ app.get('/pages/itemList.html', (req, res) => {
 });
 
 // Endpoint to get items for a specific shopping list
-app.get('/api/items', (req, res) => {
+app.get('/api/items', async (req, res) => {
     const listId = req.query.listId;
     console.log('Received request for listId:', listId);
 
@@ -89,10 +87,14 @@ app.get('/api/items', (req, res) => {
     console.log('Executing query:', query, 'with parameters:', [listId]);
 
     // Save current viewed list
-    app.locals.current_list = listId.toString()
+    app.locals.current_list = listId
 
+    // Fetch items from the backend
+    //const backendItems = await fetchListFromBackend(listId);
+    //console.log(backendItems);
+    
     // Fetch items for the specified shopping list from the database
-    db.all(query, [parseInt(listId)], async (err, rows) => {
+    db.all(query, [parseInt(listId)], (err, rows) => {
         if (err) {
             console.error(err.message);
             res.status(500).send('Internal Server Error');
@@ -102,11 +104,10 @@ app.get('/api/items', (req, res) => {
                 idItem: item.idItem,
                 itemName: item.itemName,
                 amountNeeded: item.amountNeeded,
-                idList: item.idList
+                idList: item.idList,
+                timestamp: item.timestamp
             }));
-
-            await synchronizeItems(itemsWithAmount)
-            res.json(itemsWithAmount);
+            res.json(itemsWithAmount)
         }
     });
 });
@@ -278,14 +279,15 @@ app.post('/api/createItem', async (req, res) => {
         // Add the item to the Two-Phase Set for creation
         await addItemToSet(itemName);
         // Get the current timestamp in UTC
-        const timestamp = moment.utc().format();
+        const timestamp = req.body.timestamp || moment.utc().format();
         // Convert the timestamp to London time zone
         const timestampInDesiredTimezone = moment(timestamp).tz('Europe/London').format();
         // Insert the new item into the Item table with the converted timestamp
         await createItem(itemName, itemAmount, listId, timestampInDesiredTimezone);
         // Clear the Two-Phase Set after processing
         clearTwoPhaseSet();
-
+        // Write the new item to the backend
+        writeListItemToBackend();
         res.json({ success: true, message: 'Item created successfully' });
     } catch (error) {
         console.error('Error creating item:', error);
@@ -317,6 +319,8 @@ app.delete('/api/deleteItem/:itemId', async (req, res) => {
         // Add the item to the Two-Phase Set for removal
         await removeItemFromSet(itemId);
 
+        deleteListItemFromBackend(itemId);
+        
         // Delete the item from the Item table based on itemId
         const deleteItemQuery = 'DELETE FROM Item WHERE idItem = ?';
         db.run(deleteItemQuery, [itemId], function (err) {
@@ -327,7 +331,7 @@ app.delete('/api/deleteItem/:itemId', async (req, res) => {
                 res.json({ success: true, message: 'Item deleted successfully' });
             }
         });
-        await sendBackend("DELETE", itemId)
+        
     } catch (error) {
         console.error('Error deleting item:', error);
         res.status(500).json({ success: false, message: 'Internal Server Error' });
@@ -347,7 +351,7 @@ app.put('/api/editItem', async (req, res) => {
         console.log("New Timestamp: " + timestamp)
         if (timestamp > existingAmount.timestamp) {
             await updateAmountNeeded(itemId, newAmountNeeded, timestamp);
-            await sendBackend("WRITE", itemId, newAmountNeeded);
+            writeListItemToBackend(itemId)
             res.json({ success: true, message: 'Item edited successfully' });
         } else {
             res.status(409).json({ success: false, message: 'Conflict - Timestamp not newer' });
@@ -402,52 +406,70 @@ app.get('/api/currentUser', (req, res) => {
     });
 });
 
-app.post('/api/syncItems', async (req, res) => {
-    const item = req.body
-    const syncAmount = await readBackend(item.idItem)
-    if (syncAmount === null)
-        res.json({amount: "DELETE"})
-    else
-        res.json({amount: syncAmount})
-
-    
+app.post('/api/syncList', async (req, res) => {
+    const listId = req.body.listId
+    const list = await fetchListFromBackend(listId)
+    res.json(list)
 })
 
-async function sendBackend(operation, itemId, amountNeeded) {
-    data_key = app.locals.current_list + itemId.toString()
-    data = {}
-    data[data_key] = amountNeeded || 0
-    app.locals.backend_socket.send([Buffer.from(""), Buffer.from(operation), Buffer.from(JSON.stringify(data))])
-    return new Promise((resolve, reject) => resolve())
+app.post('/api/writeToBackend', (req, res) => {
+    const item = req.body
+    writeListItemToBackend(item.idItem)
+})
+
+function deleteListItemFromBackend(itemId) {
+    const query = 'SELECT * FROM Item WHERE idItem = ?'
+    db.get(query, [itemId], (err, item) => {
+        if (err) {
+            console.error(err)
+            return
+        } else {
+            console.log(item)
+            app.locals.backend_socket.send([Buffer.from(""), Buffer.from("DELETE"), Buffer.from(JSON.stringify(item))])
+        }
+    })
+}
+function writeListItemToBackend(itemId = null) {
+    if (itemId === null) {
+        const query = 'SELECT * FROM Item ORDER BY idItem DESC LIMIT 1'
+        db.get(query, [], (err, item) => {
+            if (err) {
+                console.error(err)
+                return
+            } else {
+                app.locals.backend_socket.send([Buffer.from(""), Buffer.from("WRITE"), Buffer.from(JSON.stringify(item))])
+            }
+        })
+    } else {
+    const query = 'SELECT * FROM Item WHERE idItem = ?'
+        db.get(query, [itemId], (err, item) => {
+            if (err) {
+                console.error(err)
+                return
+            } else {
+                app.locals.backend_socket.send([Buffer.from(""), Buffer.from("WRITE"), Buffer.from(JSON.stringify(item))])
+            }
+        })
+    }
 }
 
-async function synchronizeItems(items) {
-    itemsToWrite = []
-    for (const item of items) {
-        const amount = await readBackend(item.idItem)
-        if (amount === null)
-            itemsToWrite.push(item)
-        else
-            item.amountNeeded = parseInt(amount)
-    }
-    for (const item of itemsToWrite) {
-        await sendBackend("WRITE", item.idItem, item.amountNeeded)
-    }
-}
+async function fetchListFromBackend(listId) {
+    app.locals.backend_socket.send([Buffer.from(""), Buffer.from("READ"), Buffer.from(listId)])
+    message_received = false
+    app.locals.backend_socket.on("message", function(empty, key, reply) {
+        message_received = true
+        if (reply.toString() !== "NO DATA") {
+            msg = JSON.parse(reply.toString())
+        } else
+            msg = reply.toString()
+        
+    })
 
-
-async function readBackend(itemId) {
-    data_key = app.locals.current_list + itemId.toString()
-    app.locals.backend_socket.send([Buffer.from(""), Buffer.from("READ"), Buffer.from(data_key)])
-
-    return new Promise((resolve, reject) =>
-        app.locals.backend_socket.on("message", function(empty, reply) {
-            reply_str = reply.toString()
-            if (reply_str === "ERROR") {
-                console.log("ERROR FETCHING DATA")
-                resolve(null)
-            } else
-                resolve(reply_str)
-
-    }))
+    return new Promise((resolve, reject) => setTimeout(function() {
+        if (!message_received) {
+            resolve("ERROR")
+        } else {
+            resolve(msg)
+        }
+    }, 300))
 }

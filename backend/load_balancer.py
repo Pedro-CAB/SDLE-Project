@@ -3,6 +3,7 @@ from random import choice
 import multiprocessing
 import logging
 import zmq
+import json
 
 NBR_CLIENTS = 10
 NBR_WORKERS = 3
@@ -64,6 +65,7 @@ def main(ctx, pipe):
     # Only poll for requests from backend until workers are available
     poller.register(backend, zmq.POLLIN)
     poller.register(pipe, zmq.POLLIN)
+    poller.register(frontend, zmq.POLLIN)
 
     while True:
         sockets = dict(poller.poll())
@@ -93,25 +95,28 @@ def main(ctx, pipe):
                 logger.debug(f"WORKER '{worker.decode('utf-8')}' REMOVED")
                 workers.remove(worker)
                 logger.debug(f"WORKERS: {workers}")
-            if workers and not backend_ready:
+            #if workers and not backend_ready:
                 # Poll for clients now that a worker is available and backend was not ready
-                poller.register(frontend, zmq.POLLIN)
-                backend_ready = True
+                #poller.register(frontend, zmq.POLLIN)
+                #backend_ready = True
             if client != b"READY" and len(request) > 3:
                 # If client reply, send rest back to frontend
-                empty, reply = request[3:]
-                frontend.send_multipart([client, b"", reply])
+                empty, key, reply = request[3:]
+                frontend.send_multipart([client, b"", key, reply])
         if frontend in sockets:
             # Get next client request, route to last-used worker
             request = frontend.recv_multipart()
             logger.debug(f"FRONTEND_MSG: {request}")
+            if not workers:
+                logger.debug(f"NO WORKERS AVALIABLE. REQUEST DISCARDED.")
+                continue
             client, empty, operation, content = request
             worker = choice(workers)
             backend.send_multipart([worker, client, b"", operation, content])
-            if not workers:
+            #if not workers:
                 # Don't poll clients if no workers are available and set backend_ready flag to false
-                poller.unregister(frontend)
-                backend_ready = False
+                #poller.unregister(frontend)
+                #backend_ready = False
 
     # Clean up
     backend.close()
@@ -132,7 +137,7 @@ if __name__ == "__main__":
         try:
             op = input()
             content = input()
-            lb_thread.send_multipart([op.encode('utf-8'), content.encode('utf-8')])
+            lb_thread.send_multipart([op.encode('utf-8'), json.dumps(content)])
         except (EOFError, KeyboardInterrupt, SystemExit):
             break
     lb_thread.send_multipart(["$TERM".encode('utf-8')])
