@@ -33,3 +33,4 @@ npm start
 The server is hosted in ``localhost:3000``. After running the server, you can [click here](http://localhost:3000) to see the website working in its current version.
 
 ## Documentation and Notes
+[Video Presentation](https://clipchamp.com/watch/I2XCLW0vyfd)
