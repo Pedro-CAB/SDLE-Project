@@ -1,0 +1,863 @@
+<?xml version="1.0" encoding="UTF-16" standalone="yes"?>
+<yaf>
+
+    <!-- global configuration block: -->
+
+  
+    <globals background="0 0 0.0 0" ambient="0 0 0 0" />  <!-- background color and ambient light -->
+    <fog color="0.0 0.0 0.0 0.0" near="0.0" far="500.0" />
+
+    <!-- CAMERAS BLOCK -->
+
+    <cameras initial="view1">
+    <perspective id="view1" 
+        angle="40" 
+        near="0.2" 
+        far="2000" 
+        location="10 15 10" 
+        target="1 0.0 0" /> 
+
+    <orthogonal id="scene2" 
+        near="0.1" 
+        far="1000" 
+        location="8 15 15" 
+        target="8.0 0.0 5.0" 
+        left="-10" 
+        right="10" 
+        bottom="-10" 
+        top="10" />
+
+    <perspective id="angle3" 
+        angle="40" 
+        near="0.4" 
+        far="1500" 
+        location="15 15 25" 
+        target="0 0.0 0" />
+</cameras>
+
+
+    <skybox size="100 100 100" center="0 0 0" emissive="0 0 0 1.0" intensity="1.0" up="scenes\sgi_t2_amilton_koxi\textures\skybox.jpg" down="scenes\sgi_t2_amilton_koxi\textures\skybox.jpg" left="scenes\sgi_t2_amilton_koxi\textures\skybox.jpg" right="scenes\sgi_t2_amilton_koxi\textures\skybox.jpg" front="scenes\sgi_t2_amilton_koxi\textures\skybox.jpg" back="scenes\sgi_t2_amilton_koxi\textures\skybox.jpg"/>
+    
+    <!-- TEXTURES BLOCK -->
+
+    <textures>
+        <texture id="wallTex" filepath="scenes\sgi_t2_amilton_koxi\textures\wallTex.jpg" />
+        <texture id="bumpWallTex" filepath="scenes\sgi_t2_amilton_koxi\textures\wallTex.jpg" />
+        <texture id="floorTex" filepath="scenes\sgi_t2_amilton_koxi\textures\floorr2.jpg" />
+        <texture id="tableTex" filepath="scenes\sgi_t2_amilton_koxi\textures\textured-black-plastic-close-up.jpg" />
+        <texture id="TvboardFrontTex" filepath="scenes\sgi_t2_amilton_koxi\textures/tv_texture.jpg" />
+        <texture id="windows2" filepath="scenes/sgi_t2_amilton_koxi/textures/pexels-lisa-fotios-3703737.jpg" />
+        <texture id="windowFrameTex" filepath="scenes\sgi_t2_amilton_koxi\textures\windowTexture.jpg" />
+        <texture id="monalisaTex" filepath="scenes\sgi_t2_amilton_koxi\textures\monalisa.jpg" />
+        <texture id="videoTexture" filepath="scenes\sgi_t2_amilton_koxi\textures\videopapa.mp4" isVideo="true" />
+        <texture id="woodTexture" filepath="scenes\sgi_t2_amilton_koxi\textures\alddd.jpg" />
+        <texture id="woodFrameTex" filepath="scenes\sgi_t2_amilton_koxi\textures\table.png" />
+        <texture id="cabinetTexture" filepath="scenes\sgi_t2_amilton_koxi\textures\tv_texture.jpg" />
+        <texture id="cabinetShelfTexture" filepath="scenes\sgi_t2_amilton_koxi\textures\tv_texture.jpg" />
+        <texture id="tvBoxTexture" filepath="scenes\sgi_t2_amilton_koxi\textures\textured-black-plastic-close-up.jpg" />
+        <texture id="SofaTexture" filepath="scenes\sgi_t2_amilton_koxi\textures\sofa.jpg" 
+            mipmap0="scenes\sgi_t2_amilton_koxi\textures\sofa_mipmap0.jpg"
+            mipmap1="scenes\sgi_t2_amilton_koxi\textures\sofa_mipmap1.jpg"
+            mipmap2="scenes\sgi_t2_amilton_koxi\textures\sofa_mipmap2.jpg"
+            mipmap3="scenes\sgi_t2_amilton_koxi\textures\sofa_mipmap3.jpg"
+            mipmap4="scenes\sgi_t2_amilton_koxi\textures\sofa_mipmap4.jpg" />
+
+        <texture id="magazineTexture" filepath="scenes\sgi_t2_amilton_koxi\textures\folha1.jpg" />
+        <texture id="bumpSofaTex" filepath="scenes\sgi_t2_amilton_koxi\textures\bump_sofa.jpg" />
+        <texture id="columnTexture" filepath="scenes\scenes\sgi_t2_amilton_koxi\textures\tv_texture.jpg" />
+        <texture id="columnFrontTexture" filepath="scenes\sgi_t2_amilton_koxi\textures\column.png" />
+        <texture id="pillTex" filepath="scenes\sgi_t2_amilton_koxi\textures\sofaTex.jpg" />
+         <texture id="pyramidTex" filepath="scenes\sgi_t2_amilton_koxi\textures\TerrazzoSlab028_COL_2K_METALNESS.png" />
+
+        
+
+
+        
+    </textures>
+    
+    <!-- MATERIALS BLOCK -->
+
+    <materials>
+
+        <material id="pillowApp" 
+            color="0.85 0.85 0.85 1.0" 
+            emissive="0.0 0.0 0.0 0.0" 
+            specular="0.1 0.1 0.1 1" 
+            shininess="5" 
+            textureref="pillTex"  
+            texlength_s="10" 
+            texlength_t="10" />
+
+        <material id="wallApp" 
+            color="0.85 0.85 0.85 1.0" 
+            emissive="0.0 0.0 0.0 0.0" 
+			specular="0.1 0.1 0.1 1" 
+            shininess="5" 
+            textureref="wallTex" 
+            texlength_s="1" 
+            texlength_t="1" 
+            bumpref="bumpWallTex"
+            bumpscale = "1"/>
+
+        <material id="floorApp"
+            color="0.7 0.7 0.7 1.0" 
+            emissive="0.1 0.1 0.1 1"
+            specular="0.0 0.0 0.0 0.0"
+            shininess="20"
+            textureref="floorTex"
+            texlength_s="10"
+            texlength_t="10" />
+
+        <material id="monalisaApp" 
+        color="1.0 1.0 1.0 1.0" 
+        emissive="0.0 0.0 0.0 0.0" 
+        specular="0.1 0.1 0.1 1" 
+        shininess="10" 
+        textureref="monalisaTex" 
+        texlength_s="1.5" 
+        texlength_t="2.0"  />
+
+
+
+        <material id="TvboardFrontApp"
+            color="0.8 0.8 0.8 1.0"
+            emissive="0.0 0.0 0.0 1"
+            specular="0 0 0 0"
+            shininess="10"
+            textureref="TvboardFrontTex"
+            texlength_s="2"
+            texlength_t="3" />
+
+        <material id="pyramidMaterial"
+            color="1 1 1 1"              
+            emissive="0 0 0 1"           
+            specular="0.5 0.5 0.5 1"     
+            shininess="50"              
+            textureref="pyramidTex"  
+            texlength_s="1"              
+            texlength_t="1" />
+
+    
+        <material id="cabinetShelfMaterial" 
+            color="1.0 1.0 1.0 1.0" 
+            emissive="0.0 0.0 0.0 0.0" 
+            specular="0.1 0.1 0.1 1" 
+            shininess="10" 
+            textureref="cabinetShelfTexture" 
+            texlength_s="1000" 
+            texlength_t="1000" />
+        
+        <material id="cabinetMaterial" 
+            color="1.0 1.0 1.0 1.0" 
+            emissive="0.0 0.0 0.0 0.0" 
+            specular="0.1 0.1 0.1 1" 
+            shininess="10" 
+            textureref="cabinetTexture" 
+            texlength_s="1000" 
+            texlength_t="1000" />
+             
+       <material id="frameMaterial" 
+            color="0.6 0.3 0.1 1.0" 
+            emissive="0.1 0.05 0.02 1" 
+            specular="0.2 0.2 0.2 1" 
+            shininess="25" 
+            textureref="woodFrameTex" 
+            texlength_s="1" 
+            texlength_t="1" />
+
+        <material id="windowFrameApp"
+            color="0.8 0.8 0.8 0.5" 
+            emissive="0.0 0.0 0.0 0.0" 
+            specular="0.1 0.1 0.1 0.1" 
+            shininess="10" 
+            textureref="windowFrameTex"  
+            texlength_s="1" 
+            texlength_t="1" />
+
+      <material id="sofaMaterial" 
+            color="0.8 0.8 0.8 1.0" 
+            emissive="0.0 0.0 0.0 1" 
+            specular="0 0 0 0" 
+            shininess="10" 
+            textureref="SofaTexture" 
+            texlength_s="1" 
+            texlength_t="1"
+            bumpref="bumpSofaTex"
+            bumpscale="0.05" />
+
+        <material id="Windownsch"
+            color="0.8 0.8 0.8 1.0"
+            emissive="0.0 0.0 0.0 1"
+            specular="0 0 0 0"
+            shininess="2" 
+            textureref="windows2"
+            texlength_s="1"
+            texlength_t="1" />
+
+       <material id="tvMaterial" 
+            color="1.0 1.0 1.0 1.0" 
+            emissive="0.0 0.0 0.0 1" 
+            specular="0.1 0.1 0.1 1" 
+            shininess="10" 
+            textureref="videoTexture" 
+            texlength_s="1.9" 
+            texlength_t="2.1" />
+
+        <material id="roundTableMaterial" 
+            color="0.8 0.7 0.6 1.0" 
+            emissive="0.0 0.0 0.0 1" 
+            specular="0.2 0.2 0.2 1" 
+            shininess="30" 
+            textureref="woodTexture" 
+            texlength_s="1.9" 
+            texlength_t="2.1" />
+
+        <material id="tvBoxMaterial" 
+            color="0.6 0.6 0.6 1.0" 
+            emissive="0.0 0.0 0.0 0.0" 
+            specular="0.3 0.3 0.3 1" 
+            shininess="20" 
+            textureref="tvBoxTexture" 
+            texlength_s="1" 
+            texlength_t="1" />
+
+        
+    
+    <material id="magazineMaterial" 
+              color="0.8 0.8 0.8 1.0" 
+              emissive="0.1 0.1 0.1 1" 
+              specular="0.2 0.2 0.2 1" 
+              shininess="10" 
+              textureref="magazineTexture"
+              texlength_s="1"
+              texlength_t="10" />
+              
+    <material id="columnMaterial" 
+        color="0.0 0.0 0.0 0.5" 
+        emissive="0.0 0.0 0.0 1.0"
+        specular="0.5 0.5 0.5 1.0"  
+        shininess="10"  
+        textureref="columnTexture"
+        texlength_s="1" 
+        texlength_t="1" />
+
+    <material id="columnFrontMaterial" 
+        color="1.0 1.0 1.0 1.0" 
+        emissive="0.0 0.0 0.0 1.0"
+        specular="10.5 10.5 10.5 1.0"  
+        shininess="100"  
+        textureref="columnFrontTexture"
+        texlength_s="0.5" 
+        texlength_t="1"/>
+        
+
+    </materials>
+
+    <!-- GRAPH BLOCK -->
+
+    <graph rootid="scene">
+    
+        <lod id="pillowLOD">
+        <noderef id="pillowSphere" mindist="10" />
+        <noderef id="pillowCube" mindist="30" />
+        </lod>
+
+
+        <node id="scene"> 
+            <children> 
+                <noderef id="leftWall" /> 
+                <noderef id="rightWall" />
+                <noderef id="floor" />
+                <noderef id="Tv" />
+                <noderef id="window" />
+                <noderef id="horizontalCabinetShelf" />
+                <noderef id="verticalCabinet" />
+                <noderef id="pictureFrame" />
+                <noderef id="sofaBackrest" />
+                <noderef id="sofaSeat" />
+                <noderef id="sofaLeftArm" />
+                <noderef id="sofaRightArm" />
+                <noderef id="sofaTexture" />
+                <noderef id="roundTable" />
+                <noderef id="frameTop" />
+                <noderef id="frameBottom" />
+                <noderef id="frameLeft" />
+                <noderef id="frameRight" />
+                <noderef  id="tvBox" />
+                <noderef id = "magazine"/>
+                <noderef id = "magazinePage1"/>
+                <noderef id = "magazinePage2"/>
+                <noderef id = "magazinePage3"/>
+                <noderef id = "magazinePage4"/>
+                <noderef id = "magazinePage5"/>
+                <noderef id = "column"/>
+                <noderef id = "columnFrontFace"/>
+                <noderef id="pillow" />
+                <noderef id="pyramid" />
+
+
+                
+
+               
+        
+                <pointlight id="mainLight" enabled="true" 
+                color="0.5 0.6 0.8 1" 
+                intensity="1.0"
+                distance="1000"
+                decay="0.3"
+                castshadow="true"
+                position="33.75 37.3 33.75" 
+            /> 
+
+            <pointlight id="ambientLight" enabled="true" 
+                color="0.5 0.6 0.8 1" 
+                intensity="1.0"
+                distance="1000"
+                decay="0.3"
+                castshadow="true"
+                position="11.25 7.3 3.75"
+            /> 
+
+            <pointlight id="decorativeLight" enabled="true" 
+                color="0.5 0.6 0.8 1" 
+                intensity="1.0"
+                distance="1000"
+                decay="0.3"
+                castshadow="true"
+                position="11.25 7.3 3.75" 
+            />
+
+            <pointlight id="topShadeLight" enabled="true" 
+                color="1 1 1 1" 
+                intensity="1"
+                distance="1000"
+                decay="0.3"
+                castshadow="true"
+                position="4 4.25 0.5"  
+            />
+
+            <pointlight id="bottomShadeLight" enabled="true" 
+                color="1 1 1 1" 
+                intensity="0.5"
+                distance="1000"
+                decay="0.3"
+                castshadow="true"
+                position="12 1.5 3"  
+            /> 
+
+            <pointlight id="leftShadeLight" enabled="true" 
+                color="1 1 1 1" 
+                intensity="0.5"
+                distance="1000"
+                decay="0.3"
+                castshadow="true"
+                position="13 2.75 3"  
+            /> 
+
+            <pointlight id="rightShadeLight" enabled="true" 
+                color="1 1 1 1" 
+                intensity="2"
+                distance="1000"
+                decay="5.3"
+                castshadow="true"
+                position="11 1.75 8"  
+            /> 
+
+            <pointlight id="frontShadeLight" enabled="true" 
+                color="1 1 1 1" 
+                intensity="2"
+                distance="1000"
+                decay="0.3"
+                castshadow="true"
+                position="12 2.75 2"  
+            />
+
+            <spotlight id="accentLight" enabled="true"          
+                color="1.0 1.0 1.0 1"
+                intensity="2.0"         
+                distance="1000"          
+                angle="90"
+                decay="2"             
+                penumbra="1"          
+                position="6 2 15"
+                target="4.5 0.5 7.5"
+                castshadow="true"  
+            />
+
+                
+
+             
+
+            </children> 
+        </node>
+
+            <!-- Node for the floor and wall -->
+        <node id="floor" receiveshadows="1">
+			<transforms>
+				<translate value3="0 0 15" />
+				<rotate value3="-90 0.0 0.0" />
+            </transforms> 
+
+			<materialref id="floorApp" />
+			
+            <children>             
+                <primitive>
+                    <rectangle xy1="0 0" xy2="15 15" />
+                </primitive>
+            </children> 
+        </node>
+
+        <node id="leftWall" receiveshadows="1">
+			<transforms>
+				<translate value3="0 0 15" />
+				<rotate value3="0.0 90 0.0" />
+            </transforms> 
+
+			<materialref id="wallApp" />
+			
+            <children>
+                <primitive>
+                    <rectangle xy1="0 0" xy2="15 8" />
+                </primitive>
+                
+            </children>
+        </node>
+
+        <node id="rightWall" receiveshadows="1">
+			<materialref id="wallApp" />
+			
+            <children>             
+                <primitive>
+                    <rectangle xy1="0 0" xy2="15 8" />
+                </primitive>
+            </children> 
+        </node>
+
+        <!-- Node for monalisa and framer -->
+    <node id="pictureFrame" castshadows="1">
+    <transforms>
+        <translate value3="12 5 0.01" /> 
+        <scale value3="1.5 1.5 1" /> 
+    </transforms>
+    <materialref id="monalisaApp" />
+    <children>
+        <primitive>
+            <rectangle xy1="-0.75 -1" xy2="0.75 1" /> 
+        </primitive>
+    </children>
+</node>
+   <!-- Nó da moldura superior -->
+<node id="frameTop">
+    <transforms>
+        <translate value3="12 6.25 0.01" />
+        <scale value3="1.55 0.05 0.05" />
+    </transforms>
+    <materialref id="frameMaterial" />
+    <children>
+        <primitive>
+            <box xyz1="-0.775 4.025 -0.025" xyz2="0.775 0.025 0.025" />
+        </primitive>
+    </children>
+</node>
+<!-- Nó da moldura inferior -->
+<node id="frameBottom">
+    <transforms>
+        <translate value3="12 3.55 0.01" />
+        <scale value3="1.55 0.05 0.05" />
+    </transforms>
+    <materialref id="frameMaterial" />
+    <children>
+        <primitive>
+            <box xyz1="-0.775 4.025 -0.025" xyz2="0.775 0.025 0.025" />
+        </primitive>
+    </children>
+</node>
+<!-- Nó da moldura esquerda -->
+<node id="frameLeft">
+    <transforms>
+        <translate value3="12.95 5 0.01" />
+        <scale value3="0.05 1.86 1.05" />
+    </transforms>
+    <materialref id="frameMaterial" />
+    <children>
+        <primitive>
+            <box xyz1="-0.025 -0.775 -0.025" xyz2="4.025 0.775 0.025" />
+        </primitive>
+    </children>
+</node>
+<!-- Nó da moldura direita -->
+<node id="frameRight">
+    <transforms>
+        <translate value3="10.75 5 0.01" />
+        <scale value3="0.05 1.86 0.6" />
+    </transforms>
+    <materialref id="frameMaterial" />
+    <children>
+        <primitive>
+            <box xyz1="-0.025 -0.775 -0.025" xyz2="4.025 0.775 0.025" />
+        </primitive>
+    </children>
+</node>
+
+    <!-- Nó do assento do sofá -->
+<node id="sofaSeat" castshadows="1">
+    <transforms>
+        <translate value3="7.0 0.0 10.0" /> 
+        <scale value3="3.0 0.5 1.0" /> 
+    </transforms>
+    <materialref id="sofaMaterial" />
+    <children>
+        <primitive>
+            <box xyz1="-1.5 -0.25 -1" xyz2="1.5 1.76 1" /> 
+        </primitive>
+    </children>
+</node>
+
+<!-- Nó do encosto do sofá -->
+<node id="sofaBackrest" castshadows="1">
+    <transforms>
+        <translate value3="7 1.6 10.699" /> 
+        <scale value3="3.0 1.5 0.5" /> 
+    </transforms>
+    <materialref id="sofaMaterial" />
+    <children>
+        <primitive>
+            <box xyz1="-1.5 -0.5 -0.25" xyz2="1.5 0.5 0.55" /> 
+        </primitive>
+    </children>
+</node>
+
+    <!-- Braço esquerdo do sofá -->
+<node id="sofaLeftArm" castshadows="1">
+    <transforms>
+        <translate value3="11.10 1.20 10.19" /> 
+        <scale value3="0.28 0.7 1.2" /> 
+    </transforms>
+    <materialref id="sofaMaterial" />
+    <children>
+        <primitive>
+            <box xyz1="-0.125 -0.5 -1" xyz2="1.55 0.5 0.45" /> 
+        </primitive>
+    </children>
+</node>
+    <!-- Braço direito do sofá -->
+<node id="sofaRightArm" castshadows="1">
+    <transforms>
+        <translate value3="2.9 1.20 9.6" /> 
+        <scale value3="0.28 0.7 1.2" />
+    </transforms>
+    <materialref id="sofaMaterial" />
+    <children>
+        <primitive>
+            <box xyz1="-1.55 -0.5 -0.45" xyz2="0.125 0.5 1" />
+        </primitive>
+    </children>
+</node>
+
+<!-- Atualização do nó que agrupa o sofá -->
+<node id="sofat" castshadows="1">
+    <children>
+        <noderef id="sofaSeat" />
+        <noderef id="sofaBackrest" />
+        <noderef id="sofaLeftArm" />
+        <noderef id="sofaRightArm" />
+    </children>
+</node>
+  <!-- Node for Pillow -->
+<node id="pillow" castshadows="1">
+    <transforms>
+        <translate value3="4.2 1.1 9.5" /> 
+        <scale value3="1.1 0.5 1" /> 
+        <rotate value3="0 0 0" />
+    </transforms>
+    
+    <materialref id="pillowApp" />
+    
+    <children>
+        <lodref id="pillowLOD" />
+    </children>
+</node>
+
+<!-- Pillow in Sphere Form -->
+<node id="pillowSphere" castshadows="1">
+    <children>
+        <primitive>
+            <sphere radius="0.75" slices="16" stacks="16" /> 
+        </primitive>
+    </children>
+</node>
+
+<!-- Pillow in Cube Form -->
+<node id="pillowCube" castshadows="1">
+    <children>
+        <primitive>
+            <box xyz1="-0.75 -0.75 -0.75" xyz2="0.75 0.75 0.75"/>
+        </primitive>
+    </children>
+</node>
+
+    <node id="Tv" castshadows="1">
+            <transforms>
+                <translate value3="7 5 0.01" /> 
+                <scale value3="2.5 2.85 2.1" />
+            </transforms>
+            <materialref id="tvMaterial" />
+            <children>
+                <primitive>
+                    <rectangle xy1="-1 -0.5" xy2="1 0.5" />
+                </primitive>
+            </children>
+    </node>
+
+  <!-- Horizontal Cabinet Shelf next to the TV -->
+<node id="horizontalCabinetShelf" castshadows="1">
+    <transforms>
+        <translate value3="7 0.15 0.6" /> 
+        <scale value3="3 0.5 1" /> 
+    </transforms>
+    <materialref id="cabinetShelfMaterial" />
+    <children>
+        <primitive>
+            <box xyz1="-1.5 -0.25 -0.5" xyz2="1.5 3 0.5" /> 
+        </primitive>
+    </children>
+</node>
+
+<!-- Vertical Cabinet next to the TV -->
+<node id="verticalCabinet" castshadows="1">
+    <transforms>
+        <translate value3="2 1.5 0.6" /> 
+        <scale value3="0.5 3 1" /> 
+    </transforms>
+    <materialref id="cabinetMaterial" />
+    <children>
+        <primitive>
+            <box xyz1="-0.25 -0.5 -0.5" xyz2="3 1.5 0.5" /> 
+        </primitive>
+    </children>
+</node>
+
+  
+    
+<node id="TvboardFront">
+    <transforms>
+        <translate value3="0.1 0.15 2.01" />
+        <scale value3="0.9 0.9 0.9" />
+    </transforms>
+    <materialref id="TvboardFrontApp" />
+    <children>
+        <primitive>
+            <rectangle xy1="0 0" xy2="2 3" />
+        </primitive>
+    </children>
+</node>
+
+    <!-- No for round Table -->
+ <node id="roundTable" castshadows="1">
+    <transforms>
+        <translate value3="7 0.5 5.5" /> 
+        <scale value3="1.7 0.1 1.0" /> 
+    </transforms>
+    <materialref id="roundTableMaterial" /> 
+    <children>
+        <primitive>
+            <cylinder base="0.5" top="1" height="10" slices="32" stacks="1" /> 
+        </primitive>
+    </children>
+</node>
+
+
+ <!-- No for window -->
+<node id="window">
+            <transforms>
+                <translate value3="0 0 0" />
+                <scale value3="1 1 1" />
+            </transforms>
+            <materialref id="Windownsch" />
+            <children>
+                <primitive>
+                    <box xyz1="-0.01 3 4" xyz2="0.01 5 7" />
+                </primitive>
+                <noderef id="windowFrame" />
+            </children>
+        </node>
+
+        <node id="windowFrame">
+            <transforms>
+                <translate value3="0 0 0" />
+                <scale value3="1 1 1" />
+            </transforms>
+            <materialref id="windowFrameApp" />
+            <children>
+                <primitive>
+                    <box xyz1="0 0 0" xyz2="0 0 0" />
+                </primitive>
+                <primitive>
+                    <box xyz1="-0.01 2.8 5.4" xyz2="0.025 5.2 5.6" />
+                </primitive>
+                <primitive>
+                    <box xyz1="-0.01 2.8 3.8" xyz2="0.031 5.2 4" />
+                </primitive>
+                <primitive>
+                    <box xyz1="-0.01 2.8 7" xyz2="0.032 5.2 7.2" />
+                </primitive>
+                <primitive>
+                    <box xyz1="-0.01 2.8 3.8" xyz2="0.033 3 7.2" />
+                </primitive>
+                <primitive>
+                    <box xyz1="-0.01 5 3.8" xyz2="0.034 5.2 7.2" />
+                </primitive>
+            </children>
+ </node>
+        
+
+<node id="tvBox" castshadows="1">
+    <transforms>
+        <translate value3="7.5 1.59 0.5" /> 
+        <scale value3="-0.25 0.15 0.9" /> 
+    </transforms>
+    <materialref id="tvBoxMaterial" /> 
+    <children>
+        <primitive>
+            <box xyz1="-1 0.1 -0.375" xyz2="4.625 2.0 0.1" /> 
+        </primitive>
+    </children>
+</node>
+
+   <node id="magazine">
+    <transforms>
+        <translate value3="-5.0 0.9 -0.5" />
+        <rotate value3="0 30 0" />
+        <scale value3="0.099 0.1 2.1" />
+    </transforms>
+    <materialref id="magazineMaterial" />
+    <children>
+        <noderef id="magazinePage1" />
+        <noderef id="magazinePage2" />
+        <noderef id="magazinePage3" />
+        <noderef id="magazinePage4" />
+        <noderef id="magazinePage5" />
+    </children>
+</node>
+ <node id="magazinePage1">
+    <transforms>
+        <scale value3="1.099 0.01 2.1" />
+        <translate value3="7 1.0 5.5" />
+        <rotate value3="0 30 0" />
+    </transforms>
+    <materialref id="magazineMaterial" />
+    <children>
+        <primitive>
+            <box xyz1="-0.2 -0.01 -0.2" xyz2="0.3 0.01 0.2" />
+        </primitive>
+    </children>
+</node>
+
+<node id="magazinePage2">
+    <transforms>
+        <scale value3="1.099 0.01 2.1" />
+        <translate value3="7 1.02 5.5" />
+        <rotate value3="0 30 0" />
+    </transforms>
+    <materialref id="magazineMaterial" />
+    <children>
+        <primitive>
+            <box xyz1="-0.2 -0.01 -0.2" xyz2="0.3 0.01 0.2" />
+        </primitive>
+    </children>
+</node>
+
+
+<node id="magazinePage3">
+    <transforms>
+        <scale value3="1.099 0.01 2.1" />
+        <translate value3="7 1.02 5.5" />
+        <rotate value3="0 30 0" />
+    </transforms>
+    <materialref id="magazineMaterial" />
+    <children>
+        <primitive>
+            <box xyz1="-0.2 -0.01 -0.2" xyz2="0.3 0.01 0.2" />
+        </primitive>
+    </children>
+</node>
+
+<node id="magazinePage4">
+    <transforms>
+        <scale value3="1.099 0.01 2.1" />
+        <translate value3="7 1.02 5.5" />
+        <rotate value3="0 30 0" />
+    </transforms>
+    <materialref id="magazineMaterial" />
+    <children>
+        <primitive>
+            <box xyz1="-0.2 -0.01 -0.2" xyz2="0.3 0.01 0.2" />
+        </primitive>
+    </children>
+</node>
+
+<node id="magazinePage5">
+    <transforms>
+        <scale value3="1.099 0.01 2.1" />
+        <translate value3="7 1.02 5.5" />
+        <rotate value3="0 30 0" />
+    </transforms>
+    <materialref id="magazineMaterial" />
+    <children>
+        <primitive>
+            <box xyz1="-0.2 -0.01 -0.2" xyz2="0.3 0.01 0.2" />
+        </primitive>
+    </children>
+</node>
+
+
+ <!-- Nó da coluna -->
+<node id="column" castshadows="1">
+    <transforms>
+        <translate value3="10.1 2.1 0.5" />
+        <scale value3="1 1 1" />
+        <rotate value3="0 -45 0" />
+    </transforms>
+    <materialref id="columnMaterial" />
+    <children>
+        <primitive>
+            <cylinder base="0.5" top="0.5" height="1" slices="4" stacks="1" />
+        </primitive>
+    </children>
+</node>
+
+<!-- Nó da face frontal da coluna com a textura da frente -->
+<node id="columnFrontFace">
+    <transforms>
+        <translate value3="10.1 1.70 0.9" /> 
+        <rotate value3="0 0 0" /> 
+        <scale value3="1.2 0.89 1" /> 
+    </transforms>
+    <materialref id="columnFrontMaterial" />
+    <children>
+        <primitive>
+            <rectangle xy1="-0.25 0" xy2="0.25 1" /> 
+        </primitive>
+    </children>
+</node>
+
+<node id="pyramid" castshadows="1">
+            <transforms>
+                <translate value3="12.9 0.90 2.0" />
+                <scale value3 = "1 1 2" />
+                <rotate value3= "-90 0 90" />
+            </transforms>
+
+            <materialref id="pyramidMaterial" />
+
+            <children>
+                <primitive>
+                    <polygon radius="1.0" slices="4" stacks="1" color_c="1 0 0 1" color_p="1 1 0 1" />
+                </primitive>
+            </children>
+        </node>
+
+        
+ 
+    </graph> 
+</yaf>
